@@ -49,7 +49,7 @@ register_restore_return:
 ss_exit:	
 	lda !SS_INPUT_CUR
 	sta !SS_INPUT_PREV
-	
+	jsl start_practice_stuff
 	plp
 	plb
 	rtl
