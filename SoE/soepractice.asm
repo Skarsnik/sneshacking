@@ -6,8 +6,6 @@
 !PREV_MAP_COUNTER = $7FF206
 !REFRESH_HUD = $7FF208
 !DEBUG_ADDR = $7FF250
-!DOG_MAX_HP = $7E0A7F
-!DOG_HP = $7E4F61
 
 !HUD_WRAM_START = $7FF000
 !HUD_WRAM_4_START = $F000
@@ -18,16 +16,27 @@ org $C08CAD
 db $4C,"e_",$44,"og",$00
 
 ; this is just where the game clear the bg3 vram
-org $CCAFE2
-jsl stuff 
+;org $CCAFE2
+;jsl stuff 
 
-; This does a bunch of DMA and refresh the hud
+
+;org $CF8871
+
+
+; This does a bunch of DMA for the HUD and refresh the hud
 ;org $CF899C
 ;CF/899C:        A90200          lda #$0002 
 ;CF/899F:        0C290B          tsb $0B29
- ; JSL after_dma
-;  NOP : NOP
+;  JSL after_hud_refresh
+; NOP : NOP
 
+;this is like the last dma/update call of the hud stuff 
+;org $CF8819
+;NOP : NOP : NOP : NOP
+
+;CF/8826:	AF61227E	lda $7E2261
+org $CF8826
+  JSL after_hud_refresh
   
 ;;  ; 	A		B	  Y      X        L      R      	>		<		v		^	Start	  select
   ;; DW #$0080, #$8000, #$4000, #$0040, #$0020, #$0010, #$0100, #$0200, #$0400, #$0800, #$1000, #$2000,
@@ -35,36 +44,30 @@ jsl stuff
 ;; let do what we want
 org $F10000
 
-;8cafd0 lda #$c800             A:cf06 X:cf06 Y:0000 S:1fd7 D:0000 DB:8f nvmxdiZc V: 88 H: 488 F:36
-;8cafd3 sta $26       [000026] A:c800 X:cf06 Y:0000 S:1fd7 D:0000 DB:8f Nvmxdizc V: 88 H: 506 F:36
-;8cafd5 lda #$007f             A:c800 X:cf06 Y:0000 S:1fd7 D:0000 DB:8f Nvmxdizc V: 88 H: 574 F:36
-;8cafd8 sta $28       [000028] A:007f X:cf06 Y:0000 S:1fd7 D:0000 DB:8f nvmxdizc V: 88 H: 592 F:36
-;8cafda lda #$0800             A:007f X:cf06 Y:0000 S:1fd7 D:0000 DB:8f nvmxdizc V: 88 H: 620 F:36
-;8cafdd sta $2e       [00002e] A:0800 X:cf06 Y:0000 S:1fd7 D:0000 DB:8f nvmxdizc V: 88 H: 638 F:36
-;8cafdf ldx #$0700
-stuff:
- php
- jsl $808650
+after_hud_refresh:
+ ;jsl $808650
+ ;lda #$0002
+ ;tsb $0B29
+ php 
  pha
- ;lda !REFRESH_HUD
- ;CMP #$0000 : BEQ .endstuff
- lda #$0000
- STA !REFRESH_HUD
+ ;lda #$0000
+ ;STA !REFRESH_HUD
  lda #!HUD_WRAM_4_START
  sta $26
  lda #!HUD_VRAM_TOP
  sta $2e
  ldx #$0008
  jsl $808650
- .endstuff
+ ;.endstuff
  pla
+ lda $7E2261
  plb
  rtl
 
  
 start_practice_stuff:
-  and $0104 ;
-  sta $0104 ; what we replaced
+  ;and $0104 ;
+  ;sta $0104 ; what we replaced
   
   PHP
   PHX
@@ -118,25 +121,33 @@ apply_atlas_inv:
     sta $7E0A3F
     rts
 
-!DMA_ARG_SIZE = $70
-!DMA_ARG_ADDR = $72
-!DMA_ARG_DEST = $74
 
-  
+; 74 ->	7A
+save_01_06:
+	lda $01
+	sta $74
+	lda $03
+	sta $76
+	lda $05
+	sta $78
+	rts
+
+restore_01_06:
+	lda $74
+	sta $01
+	lda $76
+	sta $03
+	lda $78
+	sta $05
+	rts
+
+	
 update_hud:
-  ;lda #$2BF0
-  ;ldx #$0002
-  ;sta !HUD_WRAM_START
-  ;sta !HUD_WRAM_START, x
   
   ;Frame counter
   STA !DEBUG_ADDR
   
-  ;Saving $05
-  lda $05
-  sta $72
-  lda $06
-  sta $74
+  jsr save_01_06
   
   lda !MAP_FRAME_COUNT
   CMP.w #10000
@@ -144,8 +155,9 @@ update_hud:
   BMI .nooverflow
     lda.w #9999
   .nooverflow
- 
+  
   jsl $80870C ; this divise A and decompose it to $02, $03... until #FF
+  
   ;STA !DEBUG_ADDR
   %a8()
   ldx #$0000
@@ -187,67 +199,7 @@ update_hud:
 	INX
 	JMP .loop
   .endloop
-  lda $72
-  sta $05
-  lda $74
-  sta $06
   %a16()
-  
-  STA !DEBUG_ADDR
-  ldx #!HUD_WRAM_4_START
-  stx !DMA_ARG_ADDR
-  lda #$0008
-  sta !DMA_ARG_SIZE
-  lda #!HUD_VRAM_TOP
-  sta !DMA_ARG_DEST
-  jsr dma_vram
+  jsr restore_01_06
   rts
-  
-  ; This add to the dma table too (look cleaner)
-; A and registers must be 8 bits
-; X -> size
-; Y -> vregister
-; $28 -> bank
-; $26 -> src addr
-; $2E -> dest (vram)
-; 
- 
-  lda #!HUD_WRAM_4_START
-  sta $26
-  lda #!HUD_VRAM_TOP
-  sta $2E
-  %a8()
-  ldx #$0008
-  ldy #$0080
-  lda #$7F
-  sta $28
-  jsl $8086E3
-  %ai16()
-  rts
-
-
-dma_vram:
-  %a8()
-  lda #$80
-  sta $2115
-  %a16()
-  lda !DMA_ARG_DEST
-  sta $2116
-  lda !DMA_ARG_ADDR
-  sta $4302
-  lda !DMA_ARG_SIZE
-  sta $4305
-  %a8()
-  lda #$7F
-  sta $4304
-  lda #$01
-  sta $4300
-  lda #$18
-  sta $4301
-  lda #$01
-  sta $420B
-  %a16()
-  rts
-  
-  
-  
+    
