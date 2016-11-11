@@ -2,14 +2,19 @@
 !MAP_ID = $ADB
 !PREVIOUS_MAP_ID = $7FF200
 !MAP_FRAME_COUNT = $7FF202
+!COPY_MAP_FRAME_COUNT = $7FF220
 !INIT = $7FF204
 !PREV_MAP_COUNTER = $7FF206
 !REFRESH_HUD = $7FF208
 !DEBUG_ADDR = $7FF250
 
+!HUD_WRAM_FRAME_COUNTER = $7FF000
+!HUD_WRAM_FRAME_COUNTER_SEC = $7FF010
 !HUD_WRAM_START = $7FF000
-!HUD_WRAM_4_START = $F000
-!HUD_VRAM_TOP = $0b4E
+!HUD_WRAM_FRAME_COUNTER_4_START = $F000
+!HUD_WRAM_FRAME_COUNTER_SEC_4_START = $F010
+!HUD_VRAM_FRAME_COUNTER_START = $0b4E
+!HUD_VRAM_FRAME_COUNTER_SEC_START = $0b6D
 
 ;8EAD
 org $C08CAD
@@ -52,13 +57,23 @@ after_hud_refresh:
  pha
  ;lda #$0000
  ;STA !REFRESH_HUD
- lda #!HUD_WRAM_4_START
+ lda #!HUD_WRAM_FRAME_COUNTER_4_START
  sta $26
- lda #!HUD_VRAM_TOP
+ lda #!HUD_VRAM_FRAME_COUNTER_START
  sta $2e
  ldx #$0008
  jsl $808650
  ;.endstuff
+ 
+ 
+ lda #!HUD_WRAM_FRAME_COUNTER_SEC_4_START
+ sta $26
+ lda #!HUD_VRAM_FRAME_COUNTER_SEC_START
+ sta $2e
+ ldx #$000a
+ jsl $808650
+ 
+ 
  pla
  lda $7E2261
  plb
@@ -142,32 +157,93 @@ restore_01_06:
 	rts
 
 	
-update_hud:
-  
-  ;Frame counter
-  STA !DEBUG_ADDR
-  
+update_hud: 
+
+  ; the decompose routine erase 02->06
+  ; need to save them 
   jsr save_01_06
+  ;Frame counter
   
-  lda !MAP_FRAME_COUNT
-  CMP.w #10000
-  ;Probably need something better
-  BMI .nooverflow
-    lda.w #9999
-  .nooverflow
-  
-  jsl $80870C ; this divise A and decompose it to $02, $03... until #FF
-  
-  ;STA !DEBUG_ADDR
   %a8()
   ldx #$0000
   ldy #$0000
   .loopclear
     lda #$00
-    sta !HUD_WRAM_START, x
+    sta !HUD_WRAM_FRAME_COUNTER, x
 	INX
 	CPX #$0008 : BNE .loopclear
+  %a16()
+  lda #!HUD_WRAM_FRAME_COUNTER_4_START
+  sta $F0
+  lda #$0008
+  sta $7A
+  lda !MAP_FRAME_COUNT
+  sta !COPY_MAP_FRAME_COUNT
+  CMP.w #10000
+  ;Probably need something better
+  BMI .nooverflow
+    lda.w #9999
+  .nooverflow
+  jsr draw_numbers
+
+  ; Frame counter human readable time
+  ; init to 00>00
+  lda #$2bec
+  ldx #$0000
+  .loopzero
+    sta !HUD_WRAM_FRAME_COUNTER_SEC, X
+    INX
+	INX
+	CPX #$000A : BNE .loopzero
+  ldx #$0004
+  lda #$2bf6
+  sta !HUD_WRAM_FRAME_COUNTER_SEC, X
+  ;STA !DEBUG_ADDR
+  ;$4204/4205 is the 16 bit dividend, $4206 is the 8bit divisor, the
+  ;quotient will be put in $4214, and the remainder in $4216/4217.
+  LDA !MAP_FRAME_COUNT
+  STA $4204
+  %a8()
+  LDA #60
+  STA $4206 
+  %a16()
+  lda #!HUD_WRAM_FRAME_COUNTER_SEC_4_START
+  sta $F0
+  lda #$0004
+  sta $7A
+  lda $4216
+  sta $7C
+  lda #$0000
+  %a8()
+  LDA $4214 ; result
+  %a16()
+  jsr draw_numbers
   
+  lda #!HUD_WRAM_FRAME_COUNTER_SEC_4_START
+  clc
+  adc #$0006
+  sta $F0
+  lda #$0004
+  sta $7A
+  LDA $7C; reste
+  ;sta !DEBUG_ADDR
+  jsr draw_numbers
+  
+  jsr restore_01_06
+  rts
+  
+  
+; Use A for the number to draw
+; $F0 for the WRAM addr to put it
+; $7A for the size in WRAM (number lenght x 2)
+draw_numbers:
+
+  jsl $80870C ; this divise A and decompose it to $02, $03... until #FF
+  ;STA !DEBUG_ADDR
+  %a8()
+  lda #$7F
+  sta $F2
+  ldy #$0000
   ldx #$0000
   .loopfindmax
     lda $02, x
@@ -178,28 +254,27 @@ update_hud:
 	JMP .loopfindmax
   .endloopfm
   sty $70
-  lda #$08
+  lda $7A
   sbc $70
   tay
   ldx #$0000
   .loop
     lda #$FF
     CMP $02, x : BEQ .endloop
-    lda #$EB
+    lda #$EC
+	clc
     adc $02, x
-	stx $70 ; save x
-	tyx
-	sta !HUD_WRAM_START, x
-	INX
+	;stx $70 ; save x
+	;tyx
+	sta [$F0], Y
+	INY
 	lda #$2B
-	sta !HUD_WRAM_START, x
+	sta [$F0], Y
 	INY
-	INY
-	ldx $70 ; restaure x
+	;ldx $70 ; restaure x
 	INX
 	JMP .loop
   .endloop
   %a16()
-  jsr restore_01_06
   rts
     
