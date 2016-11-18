@@ -3,6 +3,11 @@
 !PREVIOUS_MAP_ID = $7FF200
 !MAP_FRAME_COUNT = $7FF202
 !COPY_MAP_FRAME_COUNT = $7FF220
+
+!MNI_MAP_FRAME_COUNT = $7FF222
+!MNI_SS_LOAD_FRAME_COUNT = $7FF224
+!MNI_GLOBAL_FRAME_COUNT = $7FF226
+
 !INIT = $7FF204
 !PREV_MAP_COUNTER = $7FF206
 !REFRESH_HUD = $7FF208
@@ -20,24 +25,13 @@
 org $C08CAD
 db $4C,"e_",$44,"og",$00
 
-; this is just where the game clear the bg3 vram
-;org $CCAFE2
-;jsl stuff 
 
+; This is the start of the MNI routine
+;C0/8247:	A90000  	lda #$0000
+;C0/824A:	5B      	tcd
 
-;org $CF8871
-
-
-; This does a bunch of DMA for the HUD and refresh the hud
-;org $CF899C
-;CF/899C:        A90200          lda #$0002 
-;CF/899F:        0C290B          tsb $0B29
-;  JSL after_hud_refresh
-; NOP : NOP
-
-;this is like the last dma/update call of the hud stuff 
-;org $CF8819
-;NOP : NOP : NOP : NOP
+org $C08247
+ jsl mni_begin
 
 ;CF/8826:	AF61227E	lda $7E2261
 org $CF8826
@@ -48,6 +42,23 @@ org $CF8826
   
 ;; let do what we want
 org $F10000
+
+mni_begin:
+  lda !MNI_GLOBAL_FRAME_COUNT
+  INA
+  sta !MNI_GLOBAL_FRAME_COUNT
+  
+  lda !MNI_MAP_FRAME_COUNT
+  INA
+  sta !MNI_MAP_FRAME_COUNT
+  
+  lda !MNI_SS_LOAD_FRAME_COUNT
+  INA
+  sta !MNI_SS_LOAD_FRAME_COUNT
+  
+  lda #$0000
+  tcd
+rtl
 
 after_hud_refresh:
  ;jsl $808650

@@ -127,7 +127,7 @@ save_write_table:
 	
 	; Copy WRAM 7E0000-7E1FFF to SRAM A16000-A17FFF.
 	dw $0000|$4312, $6000  ; A addr = $xx0000
-	dw $0000|$4314, $00BA  ; A addr = $71xxxx, size = $xx00
+	dw $0000|$4314, $00A1  ; A addr = $71xxxx, size = $xx00
 	dw $0000|$4316, $0020  ; size = $80xx ($8000), unused bank reg = $00.
 	dw $0000|$2181, $0000  ; WRAM addr = $xx0000
 	dw $1000|$2183, $00    ; WRAM addr = $7Exxxx  (bank is relative to $7E)
@@ -248,7 +248,7 @@ save_write_table:
 
 	; Copy WRAM 7FE000-7FFFFF to SRAM B06000-B07FFF.
 	dw $0000|$4312, $6000  ; A addr = $xx0000
-	dw $0000|$4314, $00B0  ; A addr = $71xxxx, size = $xx00
+	dw $0000|$4314, $00BA  ; A addr = $71xxxx, size = $xx00
 	dw $0000|$4316, $0020  ; size = $80xx ($8000), unused bank reg = $00.
 	dw $0000|$2181, $E000  ; WRAM addr = $xx0000
 	dw $1000|$2183, $01    ; WRAM addr = $7Exxxx  (bank is relative to $7E)
@@ -367,7 +367,7 @@ load_write_table:
 	
 	; Copy WRAM 7E0000-7E1FFF to SRAM A16000-A17FFF.
 	dw $0000|$4312, $6000  ; A addr = $xx0000
-	dw $0000|$4314, $00BA  ; A addr = $71xxxx, size = $xx00
+	dw $0000|$4314, $00A1  ; A addr = $71xxxx, size = $xx00
 	dw $0000|$4316, $0020  ; size = $80xx ($8000), unused bank reg = $00.
 	dw $0000|$2181, $0000  ; WRAM addr = $xx0000
 	dw $1000|$2183, $00    ; WRAM addr = $7Exxxx  (bank is relative to $7E)
@@ -488,7 +488,7 @@ load_write_table:
 
 	; Copy WRAM 7FE000-7FFFFF to SRAM B06000-B07FFF.
 	dw $0000|$4312, $6000  ; A addr = $xx0000
-	dw $0000|$4314, $00B0  ; A addr = $71xxxx, size = $xx00
+	dw $0000|$4314, $00BA  ; A addr = $71xxxx, size = $xx00
 	dw $0000|$4316, $0020  ; size = $80xx ($8000), unused bank reg = $00.
 	dw $0000|$2181, $E000  ; WRAM addr = $xx0000
 	dw $1000|$2183, $01    ; WRAM addr = $7Exxxx  (bank is relative to $7E)
