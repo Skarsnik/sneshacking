@@ -59,4 +59,5 @@ int	main(int ac, char* ag[])
     CuSuiteSummary(suite, output);
     CuSuiteDetails(suite, output);
     printf("%s\n", output->buffer);
+    return (suite->failCount != 0);
 }
