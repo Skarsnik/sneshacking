@@ -202,6 +202,53 @@ void CuAssertStrEquals_LineMsg(CuTest* tc, const char* file, int line, const cha
 	CuFailInternal(tc, file, line, &string);
 }
 
+char*	hexString(const char* str, const unsigned int size)
+{
+    char* toret = malloc(size * 3 + 1);
+
+    unsigned int i;
+    for (i = 0; i < size; i++)
+    {
+        sprintf(toret + i * 3, "%02X ", (unsigned char) str[i]);
+    }
+    toret[size * 3] = 0;
+    return toret;
+}
+
+int	my_strncmp(const char* s1, const char* s2, size_t size)
+{
+  for (int i = 0; i < size; i++)
+  {
+    if (s1[i] != s2[i])
+      return s1[i] > s2[i];
+  }
+  return 0;
+}
+
+void CuAssertDataEquals_LineMsg(CuTest* tc, const char* file, int line, const char* message, 
+	const char* expected, const unsigned int size, const char* actual)
+{
+	CuString string;
+	if ((expected == NULL && actual == NULL) ||
+	    (expected != NULL && actual != NULL &&
+	     my_strncmp(expected, actual, size) == 0))
+	{
+		return;
+	}
+	CuStringInit(&string);
+	if (message != NULL) 
+	{
+		CuStringAppend(&string, message);
+		CuStringAppend(&string, ": ");
+	}
+	CuStringAppend(&string, "expected <");
+	CuStringAppend(&string, hexString(expected, size));
+	CuStringAppend(&string, "> but was <");
+	CuStringAppend(&string, hexString(actual, size));
+	CuStringAppend(&string, ">");
+	CuFailInternal(tc, file, line, &string);
+}
+
 void CuAssertIntEquals_LineMsg(CuTest* tc, const char* file, int line, const char* message, 
 	int expected, int actual)
 {

@@ -58,6 +58,9 @@ char*	decompress(const char *c_data, const unsigned int start, unsigned int* unc
             // 2 bits in the original header are the hight bit for the new lenght
             // the next byte is added to this lenght
             command = (header >> 2 ) & 7;
+	    /*int tmp = header & 2;
+	    printf("header & 2 :%X", header & 2);
+	    printf("%X, %X - ", tmp, tmp << 8);*/
             lenght = ((int)((header & 2) << 8)) + (unsigned char) c_data[c_data_pos + 1];
             c_data_pos++;
         }
@@ -68,7 +71,10 @@ char*	decompress(const char *c_data, const unsigned int start, unsigned int* unc
         //printf("header %2X - Command : %d , lenght : %d\n", header, command, lenght);
 
         if (u_data_pos + lenght > allocated_memory) // Adjust allocated memory
+	{
             u_data = realloc(u_data, allocated_memory + INITIAL_ALLOC_SIZE);
+	    allocated_memory += INITIAL_ALLOC_SIZE;
+	}
         switch (command)
         {
         case 0: { // No compression, data are copied as

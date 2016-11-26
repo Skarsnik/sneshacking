@@ -71,6 +71,12 @@ void CuAssertPtrEquals_LineMsg(CuTest* tc,
 	const char* file, int line, const char* message, 
 	void* expected, void* actual);
 
+// Skarsnik: added to compare data
+void CuAssertDataEquals_LineMsg(CuTest* tc, 
+	const char* file, int line, const char* message,
+	const char* expected, const unsigned int size, const char* actual);
+
+
 /* public assert functions */
 
 #define CuFail(tc, ms)                        CuFail_Line(  (tc), __FILE__, __LINE__, NULL, (ms))
@@ -85,6 +91,9 @@ void CuAssertPtrEquals_LineMsg(CuTest* tc,
 #define CuAssertDblEquals_Msg(tc,ms,ex,ac,dl) CuAssertDblEquals_LineMsg((tc),__FILE__,__LINE__,(ms),(ex),(ac),(dl))
 #define CuAssertPtrEquals(tc,ex,ac)           CuAssertPtrEquals_LineMsg((tc),__FILE__,__LINE__,NULL,(ex),(ac))
 #define CuAssertPtrEquals_Msg(tc,ms,ex,ac)    CuAssertPtrEquals_LineMsg((tc),__FILE__,__LINE__,(ms),(ex),(ac))
+
+#define CuAssertDataEquals(tc,ex,si,ac)           CuAssertDataEquals_LineMsg((tc),__FILE__,__LINE__,NULL,(ex),(si), (ac))
+#define CuAssertDataEquals_Msg(tc,ms,ex,si,ac)           CuAssertDataEquals_LineMsg((tc),__FILE__,__LINE__,(ms),(ex),(si), (ac))
 
 #define CuAssertPtrNotNull(tc,p)        CuAssert_Line((tc),__FILE__,__LINE__,"null pointer unexpected",(p != NULL))
 #define CuAssertPtrNotNullMsg(tc,msg,p) CuAssert_Line((tc),__FILE__,__LINE__,(msg),(p != NULL))
