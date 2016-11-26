@@ -49,7 +49,7 @@ char*	decompress(const char *c_data, const unsigned int start, unsigned int* unc
         unsigned int lenght;
         char command;
 
-        command = header >> 5; // 3 lowest bits are the command
+        command = header >> 5; // 3 hightest bits are the command
         lenght = (header & 0x1F); // The rest is the lenght
 
         // Extended header, to allow for bigger lenght value than 127
