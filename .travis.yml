@@ -1,0 +1,12 @@
+language: c
+
+compiler:
+- clang
+- gcc
+
+script: 
+- cd alttp/src/test && cmake .
+- ./testdecompress
+- ./testile
+	
+
