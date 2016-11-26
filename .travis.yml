@@ -7,5 +7,5 @@ compiler:
 script: 
 - cd alttp/src/test && cmake . && make
 - ./testdecompress
-- ./testile
+- ./testtile
 

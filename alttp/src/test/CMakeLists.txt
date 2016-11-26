@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-#set(C_STANDARD_REQUIRED 99)
+set(C_STANDARD_REQUIRED 99)
 set(CMAKE_C_FLAGS "--std=c99 -Wall -Werror ${CMAKE_C_FLAGS}")
 
 project(test)
