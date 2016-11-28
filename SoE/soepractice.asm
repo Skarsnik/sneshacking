@@ -18,8 +18,8 @@
 !HUD_WRAM_START = $7FF000
 !HUD_WRAM_FRAME_COUNTER_4_START = $F000
 !HUD_WRAM_FRAME_COUNTER_SEC_4_START = $F010
-!HUD_VRAM_FRAME_COUNTER_START = $0b4E
-!HUD_VRAM_FRAME_COUNTER_SEC_START = $0b6D
+!HUD_VRAM_FRAME_COUNTER_START = $0b4B
+!HUD_VRAM_FRAME_COUNTER_SEC_START = $0b6A
 
 ;8EAD
 org $C08CAD
@@ -71,6 +71,8 @@ after_hud_refresh:
  lda #!HUD_WRAM_FRAME_COUNTER_4_START
  sta $26
  lda #!HUD_VRAM_FRAME_COUNTER_START
+ clc
+ adc $051D
  sta $2e
  ldx #$0008
  jsl $808650
@@ -80,6 +82,8 @@ after_hud_refresh:
  lda #!HUD_WRAM_FRAME_COUNTER_SEC_4_START
  sta $26
  lda #!HUD_VRAM_FRAME_COUNTER_SEC_START
+ clc
+ adc $051D
  sta $2e
  ldx #$000a
  jsl $808650
@@ -144,7 +148,11 @@ start_practice_stuff:
 
 apply_atlas_inv:
 	lda #64500
-    sta $7E0A3F
+    sta $7E4F29
+	lda #$0001
+	sta $7E4F35
+	;lda.w $1
+	;sta $7E4EB3
     rts
 
 
