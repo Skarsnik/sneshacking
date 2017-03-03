@@ -98,9 +98,9 @@ void	testExtendedHeaderDecompress(CuTest* tc)
 
 CuSuite* StrUtilGetSuite() {
     CuSuite* suite = CuSuiteNew();
-    //SUITE_ADD_TEST(suite, testValidCommandDecompress);
+    SUITE_ADD_TEST(suite, testValidCommandDecompress);
     SUITE_ADD_TEST(suite, testExtendedHeaderDecompress);
-    //SUITE_ADD_TEST(suite, testMixingCommand);
+    SUITE_ADD_TEST(suite, testMixingCommand);
     return suite;
 }
 
