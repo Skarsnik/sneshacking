@@ -44,7 +44,7 @@ void testUnpackBPP3Tile(CuTest* tc)
 
 void	testUnpackBPP2Tile(CuTest* tc)
 {
-    char buffer[24];
+    char buffer[16];
     tile8	tile;
 
     int fd = open("testsnestilebpp2.tl", O_RDONLY);
@@ -54,7 +54,7 @@ void	testUnpackBPP2Tile(CuTest* tc)
         fprintf(stderr, "Can't open testsnestilebpp2.tl : %s\n", strerror(errno));
         return ;
     }
-    read(fd, buffer, 24);
+    read(fd, buffer, 16);
     tile = unpack_bpp2_tile(buffer, 0);
 
     char expected[] = {0, 1, 2, 3, 3, 2, 1, 0,
@@ -70,10 +70,39 @@ void	testUnpackBPP2Tile(CuTest* tc)
                            expected, 64, tile.data);
 }
 
+void	testUnpackBPP4Tile(CuTest* tc)
+{
+    char buffer[32];
+    tile8	tile;
+
+    int fd = open("testsnestilebpp4.tl", O_RDONLY);
+
+    if (fd == -1)
+    {
+        fprintf(stderr, "Can't open testsnestilebpp4.tl : %s\n", strerror(errno));
+        return ;
+    }
+    read(fd, buffer, 32);
+    tile = unpack_bpp4_tile(buffer, 0);
+
+    char expected[] = {0, 1, 2, 3, 4, 5, 6, 7,
+                       8, 9, 10, 11, 12, 13, 14, 15,
+                       3, 3, 3, 3, 3, 3, 3, 3,
+                       3, 9, 9, 3, 3, 12, 12, 3,
+                       3, 9, 9, 3, 3, 12, 12, 3,
+                       3, 9, 9, 3, 3, 12, 12, 3,
+                       3, 9, 9, 3, 3, 12, 12, 3,
+                       3, 3, 3, 3, 3, 3, 3, 3,
+                      };
+    CuAssertDataEquals_Msg(tc, "BPP4 simple test (using testsnestilebpp4.tl)",
+                           expected, 64, tile.data);
+}
+
 CuSuite* StrUtilGetSuite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, testUnpackBPP2Tile);
     SUITE_ADD_TEST(suite, testUnpackBPP3Tile);
+    SUITE_ADD_TEST(suite, testUnpackBPP4Tile);
     return suite;
 }
 
