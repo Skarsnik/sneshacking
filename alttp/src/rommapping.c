@@ -27,10 +27,18 @@ int	rommapping_snes_to_pc(const unsigned int snes_addr, enum rom_type rom_type, 
 {
   int	pc_addr;
   char	*info;
-  if (rom_type == LoROM)
+  switch (rom_type)
   {
-    pc_addr = lorom_snes_to_pc(snes_addr, &info);
+    case LoROM:
+      pc_addr = lorom_snes_to_pc(snes_addr, &info);
+      break;
+    case HiROM:
+      pc_addr = hirom_snes_to_pc(snes_addr, &info);
+      break;
+    default:
+      return -1;
   }
+
   if (header)
     pc_addr += 0x200;
   if (pc_addr < 0) {
@@ -47,7 +55,8 @@ int	rommapping_pc_to_snes(const unsigned int pc_addr, enum rom_type rom_type, bo
   if (rom_type == LoROM)
   {
     snes_addr = lorom_pc_to_snes(header ? pc_addr - 0x200 : pc_addr);
+  } else {
+    return -1;
   }
-  
   return snes_addr;
 }

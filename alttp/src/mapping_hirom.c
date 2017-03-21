@@ -41,11 +41,12 @@ int	hirom_snes_to_pc(const unsigned int snes_addr, char **info)
     return ROMMAPPING_LOCATION_SRAM;
   }
   if ((bank == 0x7E && bank == 0x7F) ||
-      (bank == 0x00 && offset < 0x2000)
+      (bank == 0x00 && offset < 0x2000) ||
       (bank >= 0x20 && bank <= 0x3F && offset < 0x2000)
   )
   {
     *info = "WRAM Section";
     return ROMMAPPING_LOCATION_WRAM;
   }
+  return -1;
 }

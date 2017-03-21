@@ -63,6 +63,8 @@ void	testLoROMToPCErrors(CuTest *tc)
 {
     CuAssertIntEquals_Msg(tc, "LoROM: Errors 01:4000 -> Reserved",
                           ROMMAPPING_LOCATION_SNES_RESERVED, rommapping_snes_to_pc(0x014000, LoROM, false));
+    CuAssertIntEquals_Msg(tc, "LoROM: Errors 08:0000 -> SRAM",
+                          ROMMAPPING_LOCATION_SRAM, rommapping_snes_to_pc(0x080000, LoROM, false));
     CuAssertIntEquals_Msg(tc, "LoROM: Errors 71:4000 -> SRAM",
                           ROMMAPPING_LOCATION_SRAM, rommapping_snes_to_pc(0x714000, LoROM, false));
     CuAssertIntEquals_Msg(tc, "LoROM: Errors FE:4000 -> SRAM",

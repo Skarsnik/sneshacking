@@ -45,6 +45,9 @@ int	rommapping_pc_to_snes(const unsigned int pc_addr, enum rom_type rom_type, bo
 int	lorom_snes_to_pc(const unsigned int snes_addr, char** info);
 int	lorom_pc_to_snes(const unsigned int pc_addr);
 
+int	hirom_snes_to_pc(const unsigned int snes_addr, char** info);
+int	hirom_pc_to_snes(const unsigned int pc_addr);
+
 #ifdef __cplusplus
 }
 #endif

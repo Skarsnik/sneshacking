@@ -32,13 +32,14 @@ int	lorom_snes_to_pc(const unsigned int snes_addr, char** info)
   // 80-FD is a mirror to the start
   if (bank >= 0x80 && bank <= 0xFD)
     bank -= 0x80;
-  
   if (bank >= 0x00 && bank <= 0x3F && offset < 0x8000 && offset >= 0x2000)
   {
     *info = "SNES Reserved";
     return ROMMAPPING_LOCATION_SNES_RESERVED;
   }
-  if (((bank >= 0x70 && bank <= 0x7D) || bank == 0xFE || bank == 0xFF) && offset < 0x8000)
+  if ((((bank >= 0x70 && bank <= 0x7D) || bank == 0xFE || bank == 0xFF) && offset < 0x8000) ||
+       (bank >= 0x00 && bank < 0x3F && offset < 0x2000)
+  )
   {
     *info = "SRAM";
     return ROMMAPPING_LOCATION_SRAM;
