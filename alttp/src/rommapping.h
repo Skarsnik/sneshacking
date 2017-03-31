@@ -1,9 +1,9 @@
 /*
 Copyright 2016 Sylvain "Skarsnik" Colinet
 
- This file is part of the SkarAlttp project.
+ This file is part of the sneshackingtools project.
 
-    SkarAlttp is free software: you can redistribute it and/or modify
+    sneshackingtools is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -14,7 +14,7 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with SkarAlttp.  If not, see <http://www.gnu.org/licenses/>
+    along with sneshackingtools.  If not, see <http://www.gnu.org/licenses/>
     */
 
 #ifndef H_ROMMAPPING_H
