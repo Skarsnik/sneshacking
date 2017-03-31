@@ -17,11 +17,11 @@ palette*	extract_palette(const char* data, const unsigned int offset, const unsi
 {
   palette* toret = palette_create(palette_size, 0);
   unsigned colnum = 0;
-  for (int i = offset; i < palette_size * 2; i += 2)
+  for (int i = 0; i < palette_size * 2; i += 2)
   {
     unsigned short snes_color;
-    snes_color = data[i] << 8;
-    snes_color = snes_color + data[i + 1];
+    snes_color = data[offset + i + 1] << 8;
+    snes_color = snes_color + data[offset + i];
     toret->colors[colnum] = convertcolor_snes_to_rgb(snes_color);
     colnum++;
   }
