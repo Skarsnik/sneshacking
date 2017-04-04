@@ -36,12 +36,12 @@ typedef struct {
   unsigned int	id;
   unsigned int	size;
   m_color*	colors;
-} palette;
+} r_palette;
 
 
-palette*	palette_create(const unsigned int size, const unsigned int id);
+r_palette*	palette_create(const unsigned int size, const unsigned int id);
 
-palette*	extract_palette(const char* data, const unsigned int offset, const unsigned int palette_size);
+r_palette*	extract_palette(const char* data, const unsigned int offset, const unsigned int palette_size);
 
 m_color		convertcolor_snes_to_rgb(const unsigned short snes_color);
 unsigned short 	convertcolor_rgp_to_snes(const m_color color);
