@@ -37,6 +37,14 @@ tile8	unpack_bpp2_tile(const char* data, const unsigned int offset);
 
 tile8	unpack_bpp_tile(const char* data, const unsigned int offset, const unsigned int bpp);
 
+
+char*	pack_bpp1_tile(const tile8 tile);
+char*	pack_bpp2_tile(const tile8 tile);
+char*	pack_bpp3_tile(const tile8 tile);
+char*	pack_bpp4_tile(const tile8 tile);
+
+char*	pack_bpp_tile(const tile8 tile, const unsigned int bpp, unsigned int *size);
+
 #ifdef __cplusplus
 }
 #endif

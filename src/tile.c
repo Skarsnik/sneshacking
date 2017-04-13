@@ -20,6 +20,10 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 
 #include "tile.h"
 #include <assert.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 tile8 unpack_bpp2_tile(const char* data, const unsigned int offset)
 {
@@ -46,9 +50,9 @@ tile8 unpack_bpp_tile(const char *data, const unsigned int offset, const unsigne
     {
         for (int row = 0; row < 8; row++)
         {
-	    /* SNES bpp format interlace each byte of the first 2 bitplanes.
-	     * | byte 1 of first bitplane | byte 1 of the second bitplane | byte 2 of first bitplane | byte 2 of second bitplane | ..
-	     */
+            /* SNES bpp format interlace each byte of the first 2 bitplanes.
+             * | byte 1 of first bitplane | byte 1 of the second bitplane | byte 2 of first bitplane | byte 2 of second bitplane | ..
+             */
             bpp_pos[0] = offset + col * 2;
             bpp_pos[1] = offset + col * 2 + 1;
             char mask = 1 << (7 - row);
@@ -56,13 +60,13 @@ tile8 unpack_bpp_tile(const char *data, const unsigned int offset, const unsigne
             tile.data[col * 8 + row] |= ((data[bpp_pos[1]] & mask) == mask) << 1;
             if (bpp == 3)
             {
-	        // When we have 3 bitplanes, the bytes for the third bitplane are after the 16 bytes of the 2 bitplanes.
+                // When we have 3 bitplanes, the bytes for the third bitplane are after the 16 bytes of the 2 bitplanes.
                 bpp_pos[2] = offset + 16 + col;
                 tile.data[col * 8 + row] |= ((data[bpp_pos[2]] & mask) == mask) << 2;
             }
             if (bpp == 4)
             {
-	        // For 4 bitplanes, the 2 added bitplanes are interlaced like the first two.
+                // For 4 bitplanes, the 2 added bitplanes are interlaced like the first two.
                 bpp_pos[2] = offset + 16 + col * 2;
                 bpp_pos[3] = offset + 16 + col * 2 + 1;
                 tile.data[col * 8 + row] |= ((data[bpp_pos[2]] & mask) == mask) << 2;
@@ -71,4 +75,69 @@ tile8 unpack_bpp_tile(const char *data, const unsigned int offset, const unsigne
         }
     }
     return tile;
+}
+
+
+char*	pack_bpp1_tile(const tile8 tile)
+{
+    unsigned int p;
+    p = p;
+    return pack_bpp_tile(tile, 1, &p);
+}
+
+char*	pack_bpp2_tile(const tile8 tile)
+{
+    unsigned int p;
+    p = p;
+    return pack_bpp_tile(tile, 2, &p);
+}
+
+char*	pack_bpp3_tile(const tile8 tile)
+{
+    unsigned int p;
+    p = p;
+    return pack_bpp_tile(tile, 3, &p);
+}
+
+char*	pack_bpp4_tile(const tile8 tile)
+{
+    unsigned int p;
+    return pack_bpp_tile(tile, 4, &p);
+}
+
+
+#include <stdio.h>
+char*	pack_bpp_tile(tile8 tile, const unsigned int bpp, unsigned int *size)
+{
+    char* output = (char*) malloc(bpp * 8);
+    memset(output, 0, bpp * 8);
+    unsigned maxcolor = 2 << bpp;
+    *size = 0;
+
+    for (unsigned int col = 0; col < 8; col++)
+    {
+        for (unsigned int row = 0; row < 8; row++)
+        {
+            char color = tile.data[col * 8 + row];
+            if (color > maxcolor)
+                return NULL;
+
+            if (bpp == 1)
+                output[col] += (char)( (color & 1) << (7 - row));
+            if (bpp >= 2)
+            {
+                output[col * 2] += (char)( (color & 1) << (7 - row));
+                output[col * 2 + 1] += (char)( ((color & 2) == 2) << (7 - row));
+            }
+            if (bpp == 3)
+                output[16 + col] += (char)( ((color & 4) == 4) << (7 - row));
+            if (bpp == 4)
+            {
+                output[16 + col * 2] += (char)( ((color & 4) == 4) << (7 - row));
+                output[16 + col * 2 + 1] += (char)( ((color & 8) == 8) << (7 - row));
+            }
+        }
+    }
+    *size = bpp * 8;
+    return output;
 }
