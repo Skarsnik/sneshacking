@@ -80,28 +80,28 @@ tile8 unpack_bpp_tile(const char *data, const unsigned int offset, const unsigne
 
 char*	pack_bpp1_tile(const tile8 tile)
 {
-    unsigned int p;
+    unsigned int p = 1;
     p = p;
     return pack_bpp_tile(tile, 1, &p);
 }
 
 char*	pack_bpp2_tile(const tile8 tile)
 {
-    unsigned int p;
+    unsigned int p = 1;
     p = p;
     return pack_bpp_tile(tile, 2, &p);
 }
 
 char*	pack_bpp3_tile(const tile8 tile)
 {
-    unsigned int p;
+    unsigned int p = 1;
     p = p;
     return pack_bpp_tile(tile, 3, &p);
 }
 
 char*	pack_bpp4_tile(const tile8 tile)
 {
-    unsigned int p;
+    unsigned int p = 1;
     return pack_bpp_tile(tile, 4, &p);
 }
 
