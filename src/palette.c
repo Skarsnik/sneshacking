@@ -22,9 +22,9 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 
 // Inspired/copied from https://wiki.superfamicom.org/snes/show/Palettes
 
-palette* palette_create(const unsigned int size, const unsigned int id)
+r_palette* palette_create(const unsigned int size, const unsigned int id)
 {
-  palette *new_pal = (palette*) malloc(sizeof(palette));
+  r_palette *new_pal = (r_palette*) malloc(sizeof(r_palette));
   new_pal->colors = (m_color*) malloc(sizeof(m_color) * size);
   new_pal->id = id;
   new_pal->size = size;
@@ -32,15 +32,15 @@ palette* palette_create(const unsigned int size, const unsigned int id)
 }
 
 
-palette*	extract_palette(const char* data, const unsigned int offset, const unsigned int palette_size)
+r_palette *extract_palette(const char* data, const unsigned int offset, const unsigned int palette_size)
 {
-  palette* toret = palette_create(palette_size, 0);
+  r_palette* toret = palette_create(palette_size, 0);
   unsigned colnum = 0;
   for (int i = 0; i < palette_size * 2; i += 2)
   {
     unsigned short snes_color;
-    snes_color = data[offset + i + 1] << 8;
-    snes_color = snes_color | data[offset + i];
+    snes_color = ((uchar) data[offset + i + 1]) << 8;
+    snes_color = snes_color | ((uchar) data[offset + i]);
     toret->colors[colnum] = convertcolor_snes_to_rgb(snes_color);
     colnum++;
   }
