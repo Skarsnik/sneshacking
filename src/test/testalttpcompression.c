@@ -8,7 +8,7 @@
 #include <string.h>
 #include "CuTest.h"
 
-#include "decompress.h"
+#include "compressions/alttpcompression.h"
 
 
 #define BUILD_HEADER(command, lenght) (command << 5) + (lenght - 1)
