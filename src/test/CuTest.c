@@ -215,23 +215,13 @@ char*	hexString(const char* str, const unsigned int size)
     return toret;
 }
 
-int	my_strncmp(const char* s1, const char* s2, size_t size)
-{
-  for (int i = 0; i < size; i++)
-  {
-    if (s1[i] != s2[i])
-      return s1[i] > s2[i];
-  }
-  return 0;
-}
-
 void CuAssertDataEquals_LineMsg(CuTest* tc, const char* file, int line, const char* message, 
 	const char* expected, const unsigned int size, const char* actual)
 {
 	CuString string;
 	if ((expected == NULL && actual == NULL) ||
 	    (expected != NULL && actual != NULL &&
-	     my_strncmp(expected, actual, size) == 0))
+	     memcmp(expected, actual, size) == 0))
 	{
 		return;
 	}
