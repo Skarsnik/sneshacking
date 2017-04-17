@@ -5,6 +5,7 @@ compiler:
 
 script: 
 - cd src/test && cmake . && make
-- ./testdecompress
+- ./testalttpcompression
 - ./testtile
+- ./testpalette
 
