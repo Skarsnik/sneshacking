@@ -26,6 +26,7 @@ extern "C" {
 
 
 char*	decompress(const char *c_data, const unsigned int start, unsigned int* uncompressed_data_size);
+char*	compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size);
 
 
 #ifdef __cplusplus
