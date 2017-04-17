@@ -184,7 +184,7 @@ compression_piece*	merge_copy(compression_piece* start)
 
 unsigned int	create_compression_string(compression_piece* start, char *output)
 {
-  unsigned int pos;
+  unsigned int pos = 0;
   compression_piece*	piece = start;
   
   while (piece != NULL)
