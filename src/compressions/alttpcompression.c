@@ -21,7 +21,6 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include "alttpcompression.h"
 
 //#define MY_DEBUG 1
