@@ -18,6 +18,7 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
     */
 
 #include <stdlib.h>
+#include <string.h>
 #include "palette.h"
 
 // Inspired/copied from https://wiki.superfamicom.org/snes/show/Palettes
@@ -32,7 +33,7 @@ r_palette* palette_create(const unsigned int size, const unsigned int id)
 }
 
 
-r_palette *extract_palette(const char* data, const unsigned int offset, const unsigned int palette_size)
+r_palette *palette_extract(const char* data, const unsigned int offset, const unsigned int palette_size)
 {
   r_palette* toret = palette_create(palette_size, 0);
   unsigned colnum = 0;
@@ -43,6 +44,18 @@ r_palette *extract_palette(const char* data, const unsigned int offset, const un
     snes_color = snes_color | ((uchar) data[offset + i]);
     toret->colors[colnum] = convertcolor_snes_to_rgb(snes_color);
     colnum++;
+  }
+  return toret;
+}
+
+char*		palette_convert(const r_palette pal)
+{
+  char* toret = (char*) malloc(pal.size * 2);
+  for (unsigned int i = 0; i < pal.size; i++)
+  {
+    unsigned short snes_data = convertcolor_rgb_to_snes(pal.colors[i]);
+    toret[i * 2] = snes_data & 0xFF;
+    toret[i * 2 + 1] = snes_data >> 8;
   }
   return toret;
 }
@@ -61,12 +74,12 @@ m_color convertcolor_snes_to_rgb(const unsigned short snes_color)
   return toret;
 }
 
-unsigned short 	convertcolor_rgp_to_snes(const m_color color)
+unsigned short 	convertcolor_rgb_to_snes(const m_color color)
 {
-  return convertcolor_rgp_to_snes2(color.red, color.green, color.blue);
+  return convertcolor_rgb_to_snes2(color.red, color.green, color.blue);
 }
 
-unsigned short 	convertcolor_rgp_to_snes2(const uchar red, const uchar green, const uchar blue)
+unsigned short 	convertcolor_rgb_to_snes2(const uchar red, const uchar green, const uchar blue)
 {
   uchar R = red / 8;
   uchar G = green / 8;

@@ -7,6 +7,10 @@
 
 //0BBBBBGG GGGRRRRR
 
+#define SNES_RED 0b0000000000011111;
+#define SNES_BLUE 0b0111110000000000
+#define SNES_GREEN 0b0000001111100000
+
 unsigned int m_convert(m_color col)
 {
   unsigned int toret;
@@ -39,10 +43,34 @@ void	testSNESColor(CuTest* tc)
   CuAssertIntEquals_Msg(tc, "Testing purple", 0xFF00FF, m_convert(testcolor));
 }
 
+void	testExtraction(CuTest* tc)
+{
+  // red, blue, green, purple
+  char data[8] = {0x1F, 0x00,   0x00, 0x7C,   0xE0, 0x03,   0x1F, 0x7C};
+  r_palette* pal = palette_extract(data, 0, 4);
+  CuAssertIntEquals_Msg(tc, "Extracting 4 colors", 4, pal->size);
+  CuAssertIntEquals_Msg(tc, "Color 1 is red", 0xFF0000, m_convert(pal->colors[0]));
+  CuAssertIntEquals_Msg(tc, "Color 2 is blue", 0x0000FF, m_convert(pal->colors[1]));
+  CuAssertIntEquals_Msg(tc, "Color 3 is green", 0x00FF00, m_convert(pal->colors[2]));
+  CuAssertIntEquals_Msg(tc, "Color 4 is purple", 0xFF00FF, m_convert(pal->colors[3]));
+}
+
+void	testConvert(CuTest* tc)
+{
+  // red, blue, green, purple white
+  char data[10] = {0x1F, 0x00,   0x00, 0x7C,   0xE0, 0x03,   0x1F, 0x7C,  0xFF, 0x1F};
+  r_palette* pal = palette_extract(data, 0, 5);
+  char* snes_string = palette_convert(*pal);
+  CuAssertDataEquals_Msg(tc, "Test converting back to snes", 
+			 data, 10, snes_string);
+  free(snes_string);
+}
 
 CuSuite* StrUtilGetSuite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, testSNESColor);
+    SUITE_ADD_TEST(suite, testExtraction);
+    SUITE_ADD_TEST(suite, testConvert);
     return suite;
 }
 

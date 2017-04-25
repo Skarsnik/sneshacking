@@ -41,11 +41,13 @@ typedef struct {
 
 r_palette*	palette_create(const unsigned int size, const unsigned int id);
 
-r_palette*	extract_palette(const char* data, const unsigned int offset, const unsigned int palette_size);
+r_palette*	palette_extract(const char* data, const unsigned int offset, const unsigned int palette_size);
+
+char*		palette_convert(const r_palette pal);
 
 m_color		convertcolor_snes_to_rgb(const unsigned short snes_color);
-unsigned short 	convertcolor_rgp_to_snes(const m_color color);
-unsigned short 	convertcolor_rgp_to_snes2(const uchar red, const uchar green, const uchar blue);
+unsigned short 	convertcolor_rgb_to_snes(const m_color color);
+unsigned short 	convertcolor_rgb_to_snes2(const uchar red, const uchar green, const uchar blue);
 
 #ifdef __cplusplus
 }
