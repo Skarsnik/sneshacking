@@ -32,6 +32,12 @@ r_palette* palette_create(const unsigned int size, const unsigned int id)
   return new_pal;
 }
 
+void		palette_free(r_palette* tofree)
+{
+  free(tofree->colors);
+  free(tofree);
+}
+
 
 r_palette *palette_extract(const char* data, const unsigned int offset, const unsigned int palette_size)
 {

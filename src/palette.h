@@ -40,6 +40,7 @@ typedef struct {
 
 
 r_palette*	palette_create(const unsigned int size, const unsigned int id);
+void		palette_free(r_palette* tofree);
 
 r_palette*	palette_extract(const char* data, const unsigned int offset, const unsigned int palette_size);
 
