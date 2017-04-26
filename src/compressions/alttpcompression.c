@@ -124,7 +124,12 @@ char*	decompress(const char *c_data, const unsigned int start, unsigned int* unc
             break;
         }
         case D_CMD_COPY_EXISTING: { // Next 2 bytes form an offset to pick data from the output (dafuq?)
-            int	offset = c_data[c_data_pos + 1] | (c_data[c_data_pos + 2] << 8);
+            unsigned short offset = (unsigned char)(c_data[c_data_pos + 1]) | ((unsigned char) (c_data[c_data_pos + 2]) << 8);
+	    if (offset > u_data_pos)
+            {
+                fprintf(stderr, "Offset for command copy existing is larger than the current position\n");
+                return NULL;
+            }
             memcpy(u_data + u_data_pos, u_data + offset, lenght);
             c_data_pos += 3;
             break;
