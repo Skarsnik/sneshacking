@@ -23,7 +23,7 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 #include <stdlib.h>
 #include "alttpcompression.h"
 
-//#define MY_DEBUG 1
+#define MY_DEBUG 1
 
 #ifdef MY_DEBUG
 #define s_debug(...)  printf(__VA_ARGS__)
@@ -174,6 +174,21 @@ static char*	hexString(const char* str, const unsigned int size)
     toret[size * 3] = 0;
     return toret;
 }
+
+static char*	speHexString(const char* str, const unsigned int size)
+{
+    char* toret = (char*) malloc((size * 3 + 1) * 2);
+    toret[0] = 0;
+    char buffer[100];
+    unsigned int i;
+    for (i = 0; i < size; i++)
+    {
+        unsigned int p = snprintf(buffer, 20, "%d:%02X ", i, (unsigned char) str[i]);
+        strncat(toret, buffer, p);
+    }
+    return toret;
+}
+
 #endif
 
 static void	print_compression_piece(compression_piece* piece)
@@ -373,7 +388,7 @@ char*	compress(const char* u_data, const size_t start, const unsigned int lenght
                     if (copied_size > data_size_taken[D_CMD_COPY_EXISTING])
                     {
                         start_data -= start;
-                        s_debug("-Found repeat of %d\n", copied_size);
+                        s_debug("-Found repeat of %d at %d\n", copied_size, start_data);
                         data_size_taken[D_CMD_COPY_EXISTING] = copied_size;
                         cmd_args[D_CMD_COPY_EXISTING][0] = start_data & 0xFF;
                         cmd_args[D_CMD_COPY_EXISTING][1] = start_data >> 8;
@@ -436,6 +451,19 @@ char*	compress(const char* u_data, const size_t start, const unsigned int lenght
         if (u_data_pos > last_pos)
             break;
         //sleep(1);
+#ifdef MY_DEBUG
+        *compressed_size = create_compression_string(compressed_chain_start->next, compressed_data);
+        unsigned int p;
+        unsigned int k;
+        char *uncomp = decompress(compressed_data, 0, &p, &k);
+
+        printf("Compressed data so far : %s\n", speHexString(uncomp, p));
+        if (memcmp(uncomp, u_data, p) != 0)
+        {
+            printf("Compressed data does not match uncompressed data at %d\n", u_data_pos);
+            return NULL;
+        }
+#endif
     }
     compressed_chain = compressed_chain_start->next;
     while (compressed_chain != NULL)
