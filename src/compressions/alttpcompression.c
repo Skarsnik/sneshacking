@@ -49,7 +49,7 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
  * Then you have a new header byte and so on, until you hit a header with the value FF
  */
 
-char*	decompress(const char *c_data, const unsigned int start, unsigned int* uncompressed_data_size)
+char*	decompress(const char *c_data, const unsigned int start, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
 {
     char*		u_data;
     unsigned char	header;
@@ -144,6 +144,7 @@ char*	decompress(const char *c_data, const unsigned int start, unsigned int* unc
         header = c_data[c_data_pos];
     }
     *uncompressed_data_size = u_data_pos;
+    *compressed_lenght = c_data_pos + 1;
     return u_data;
 }
 
