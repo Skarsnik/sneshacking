@@ -28,14 +28,14 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 #ifdef MY_DEBUG
 #define s_debug(...)  printf(__VA_ARGS__)
 #else
-#define s_debug(...) 
+#define s_debug(...)
 #endif
 
 #define INITIAL_ALLOC_SIZE 512
 
 #define D_CMD_COPY 0
 #define D_CMD_BYTE_REPEAT 1
-#define D_CMD_ALTERNATE_BYTE 2
+#define D_CMD_WORD_REPEAT 2
 #define D_CMD_BYTE_INC 3
 #define D_CMD_COPY_EXISTING 4
 
@@ -73,11 +73,11 @@ char*	decompress(const char *c_data, const unsigned int start, unsigned int* unc
         // Extended header, to allow for bigger lenght value than 32
         if (command == 7)
         {
-	  // The command are the next 3 bits
+            // The command are the next 3 bits
             command = (header >> 2 ) & 7;
-	       // 2 bits in the original header are the hight bit for the new lenght
+            // 2 bits in the original header are the hight bit for the new lenght
             // the next byte is added to this lenght
-         
+
             lenght = ((int)((header & 3) << 8)) + (unsigned char) c_data[c_data_pos + 1];
             c_data_pos++;
         }
@@ -104,7 +104,7 @@ char*	decompress(const char *c_data, const unsigned int start, unsigned int* unc
             c_data_pos += 2;
             break;
         }
-        case D_CMD_ALTERNATE_BYTE: { // Next byte is A, the one after is B, copy the sequence AB lenght times
+        case D_CMD_WORD_REPEAT: { // Next byte is A, the one after is B, copy the sequence AB lenght times
             char a = c_data[c_data_pos + 1];
             char b = c_data[c_data_pos + 2];
             for (int i = 0; i < lenght; i = i + 2)
@@ -125,7 +125,7 @@ char*	decompress(const char *c_data, const unsigned int start, unsigned int* unc
         }
         case D_CMD_COPY_EXISTING: { // Next 2 bytes form an offset to pick data from the output (dafuq?)
             unsigned short offset = (unsigned char)(c_data[c_data_pos + 1]) | ((unsigned char) (c_data[c_data_pos + 2]) << 8);
-	    if (offset > u_data_pos)
+            if (offset > u_data_pos)
             {
                 fprintf(stderr, "Offset for command copy existing is larger than the current position\n");
                 return NULL;
@@ -191,11 +191,11 @@ compression_piece*	new_compression_piece(const char command, const unsigned int 
     toret->lenght = lenght;
     if (args != NULL)
     {
-      toret->argument = (char*) malloc(argument_lenght);
-      memcpy(toret->argument, args, argument_lenght);
+        toret->argument = (char*) malloc(argument_lenght);
+        memcpy(toret->argument, args, argument_lenght);
     }
     else
-      toret->argument = NULL;
+        toret->argument = NULL;
     toret->argument_lenght = argument_lenght;
     toret->next = NULL;
     return toret;
@@ -241,37 +241,37 @@ unsigned int	create_compression_string(compression_piece* start, char *output)
                 output[pos++] = (7 << 5) + (piece->command << 2) + ((piece->lenght - 1) >> 8);
                 output[pos++] = (char) ((piece->lenght - 1) & 0x00FF);
             } else { //We need to split the command
-	      unsigned int lenght_left = piece->lenght - D_MAX_LENGHT;
-	      piece->lenght = D_MAX_LENGHT;
-	      compression_piece* new_piece = NULL;
-	      if (piece->command == D_CMD_BYTE_REPEAT || piece->command == D_CMD_ALTERNATE_BYTE)
-	      {
-	        new_piece = new_compression_piece(piece->command, lenght_left, piece->argument, piece->argument_lenght);
-	      }
-	      if (piece->command == D_CMD_BYTE_INC)
-	      {
-		new_piece = new_compression_piece(piece->command, lenght_left, piece->argument, piece->argument_lenght);
-		new_piece->argument[0] = (char) (piece->argument[0] + D_MAX_LENGHT);
-	      }
-	      if (piece->command == D_CMD_COPY)
-	      {
-		piece->argument_lenght = D_MAX_LENGHT;
-		new_piece = new_compression_piece(piece->command, lenght_left, NULL, lenght_left);
-		memcpy(new_piece->argument, piece->argument + D_MAX_LENGHT, lenght_left);
-	      }
-	      if (piece->command == D_CMD_COPY_EXISTING)
-	      {
-		piece->argument_lenght = D_MAX_LENGHT;
-		unsigned int offset = piece->argument[0] + (piece->argument[1] << 8);
-		new_piece = new_compression_piece(piece->command, lenght_left, piece->argument, piece->argument_lenght);
-		new_piece->argument[0] = (offset + D_MAX_LENGHT) & 0xFF;
-		new_piece->argument[1] = (offset + D_MAX_LENGHT) >> 8;
-	      }
-	      s_debug("New added piece\n");
-	      print_compression_piece(new_piece);
-	      new_piece->next = piece->next;
-	      piece->next = new_piece;
-	      continue;
+                unsigned int lenght_left = piece->lenght - D_MAX_LENGHT;
+                piece->lenght = D_MAX_LENGHT;
+                compression_piece* new_piece = NULL;
+                if (piece->command == D_CMD_BYTE_REPEAT || piece->command == D_CMD_WORD_REPEAT)
+                {
+                    new_piece = new_compression_piece(piece->command, lenght_left, piece->argument, piece->argument_lenght);
+                }
+                if (piece->command == D_CMD_BYTE_INC)
+                {
+                    new_piece = new_compression_piece(piece->command, lenght_left, piece->argument, piece->argument_lenght);
+                    new_piece->argument[0] = (char) (piece->argument[0] + D_MAX_LENGHT);
+                }
+                if (piece->command == D_CMD_COPY)
+                {
+                    piece->argument_lenght = D_MAX_LENGHT;
+                    new_piece = new_compression_piece(piece->command, lenght_left, NULL, lenght_left);
+                    memcpy(new_piece->argument, piece->argument + D_MAX_LENGHT, lenght_left);
+                }
+                if (piece->command == D_CMD_COPY_EXISTING)
+                {
+                    piece->argument_lenght = D_MAX_LENGHT;
+                    unsigned int offset = piece->argument[0] + (piece->argument[1] << 8);
+                    new_piece = new_compression_piece(piece->command, lenght_left, piece->argument, piece->argument_lenght);
+                    new_piece->argument[0] = (offset + D_MAX_LENGHT) & 0xFF;
+                    new_piece->argument[1] = (offset + D_MAX_LENGHT) >> 8;
+                }
+                s_debug("New added piece\n");
+                print_compression_piece(new_piece);
+                new_piece->next = piece->next;
+                piece->next = new_piece;
+                continue;
             }
         }
         memcpy(output + pos, piece->argument, piece->argument_lenght);
@@ -319,29 +319,24 @@ char*	compress(const char* u_data, const size_t start, const unsigned int lenght
             }
             cmd_args[D_CMD_BYTE_REPEAT][0] = byte_to_repeat;
         }
-        {   // ALTERNATING BYTE
-            s_debug("Testing alternating byte\n");
+        {   // WORD REPEAT
+            s_debug("Testing word repeat\n");
             if (u_data_pos + 2 <= last_pos && u_data[u_data_pos] != u_data[u_data_pos + 1])
             {
                 unsigned int pos = u_data_pos;
                 char byte1 = u_data[pos];
                 char byte2 = u_data[pos + 1];
-		pos += 2;
-                data_size_taken[D_CMD_ALTERNATE_BYTE] = 2;
-                while (pos <= last_pos) {
-                    if (u_data[pos] == byte1)
-                        data_size_taken[D_CMD_ALTERNATE_BYTE]++;
+                pos += 2;
+                data_size_taken[D_CMD_WORD_REPEAT] = 2;
+                while (pos + 1 <= last_pos) {
+                    if (u_data[pos] == byte1 && u_data[pos + 1] == byte2)
+                        data_size_taken[D_CMD_WORD_REPEAT] += 2;
                     else
                         break;
-		    pos++;
-                    if (pos <= last_pos && u_data[pos] == byte2)
-                        data_size_taken[D_CMD_ALTERNATE_BYTE]++;
-                    else
-                        break;
-		    pos++;
+                    pos += 2;
                 }
-                cmd_args[D_CMD_ALTERNATE_BYTE][0] = byte1;
-                cmd_args[D_CMD_ALTERNATE_BYTE][1] = byte2;
+                cmd_args[D_CMD_WORD_REPEAT][0] = byte1;
+                cmd_args[D_CMD_WORD_REPEAT][1] = byte2;
             }
         }
         {   // INC BYTE
