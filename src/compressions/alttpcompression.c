@@ -23,7 +23,7 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 #include <stdlib.h>
 #include "alttpcompression.h"
 
-#define MY_DEBUG 1
+//#define MY_DEBUG 1
 
 #ifdef MY_DEBUG
 #define s_debug(...)  printf(__VA_ARGS__)
@@ -49,7 +49,7 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
  * Then you have a new header byte and so on, until you hit a header with the value FF
  */
 
-char*	decompress(const char *c_data, const unsigned int start, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
+char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
 {
     char*		u_data;
     unsigned char	header;
@@ -85,10 +85,11 @@ char*	decompress(const char *c_data, const unsigned int start, unsigned int* unc
         //lenght value starts at 0, 0 is 1
         lenght++;
 
-        //s_debug("header %2X - Command : %d , lenght : %d\n", header, command, lenght);
+        s_debug("header %2X - Command : %d , lenght : %d\n", header, command, lenght);
 
         if (u_data_pos + lenght > allocated_memory) // Adjust allocated memory
         {
+            s_debug("Memory get reallocated by %d\n", INITIAL_ALLOC_SIZE);
             u_data = realloc(u_data, allocated_memory + INITIAL_ALLOC_SIZE);
             allocated_memory += INITIAL_ALLOC_SIZE;
         }
@@ -123,7 +124,7 @@ char*	decompress(const char *c_data, const unsigned int start, unsigned int* unc
             c_data_pos += 2;
             break;
         }
-        case D_CMD_COPY_EXISTING: { // Next 2 bytes form an offset to pick data from the output (dafuq?)
+        case D_CMD_COPY_EXISTING: { // Next 2 bytes form an offset to pick data from the output
             unsigned short offset = (unsigned char)(c_data[c_data_pos + 1]) | ((unsigned char) (c_data[c_data_pos + 2]) << 8);
             if (offset > u_data_pos)
             {
@@ -177,7 +178,7 @@ static char*	hexString(const char* str, const unsigned int size)
 
 static char*	speHexString(const char* str, const unsigned int size)
 {
-    char* toret = (char*) malloc((size * 3 + 1) * 2);
+    char* toret = (char*) malloc(size * 20);
     toret[0] = 0;
     char buffer[100];
     unsigned int i;
@@ -217,6 +218,22 @@ compression_piece*	new_compression_piece(const char command, const unsigned int 
     return toret;
 }
 
+void    free_compression_piece(compression_piece* piece)
+{
+    free(piece->argument);
+    free(piece);
+}
+
+void    free_compression_chain(compression_piece* piece)
+{
+    while (piece != NULL)
+    {
+        compression_piece *p = piece->next;
+        free_compression_piece(piece);
+        piece = p;
+    }
+}
+
 // Merge consecutive copy if possible
 compression_piece*	merge_copy(compression_piece* start)
 {
@@ -232,6 +249,7 @@ compression_piece*	merge_copy(compression_piece* start)
                 piece->lenght = piece->lenght + piece->next->lenght;
                 piece->argument = realloc(piece->argument, piece->lenght);
                 memcpy(piece->argument + previous_lenght, piece->next->argument, piece->next->argument_lenght);
+                free_compression_piece(piece->next);
                 piece->next = piece->next->next;
                 continue; // Next could be another copy
             }
@@ -301,10 +319,14 @@ unsigned int	create_compression_string(compression_piece* start, char *output)
 
 // TODO TEST compressed data border for each cmd
 
-char*	compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size)
+char*	alttp_compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size)
 {
-    // we will realloc later
-    s_debug("==Compressing %s ==\n", hexString(u_data + start, lenght));
+#ifdef MY_DEBUG
+    char *debug_str = hexString(u_data + start, lenght);
+    s_debug("==Compressing %s ==\n", debug_str);
+    free(debug_str);
+#endif
+        // we will realloc later
     char* compressed_data = (char*) malloc(lenght);
     compression_piece* compressed_chain = new_compression_piece(42, 42, "aa", 42);
     compression_piece* compressed_chain_start = compressed_chain;
@@ -368,31 +390,37 @@ char*	compress(const char* u_data, const size_t start, const unsigned int lenght
             s_debug("Testing intra copy\n");
             if (u_data_pos != start)
             {
-                unsigned int start_pos = start;
+                unsigned int searching_pos = start;
                 //unsigned int compressed_lenght = u_data_pos - start;
                 unsigned int current_pos_u = u_data_pos;
                 unsigned int copied_size = 0;
-                unsigned int start_data = start;
-
-                while (start_pos < u_data_pos && current_pos_u <= last_pos)
+                unsigned int search_start = start;
+               /* printf("Searching for : ");
+                for (unsigned int i = 0; i < 8; i++)
                 {
-                    while (u_data[current_pos_u] != u_data[start_pos] && start_pos < u_data_pos)
-                        start_pos++;
-                    start_data = start_pos;
-                    while (u_data[current_pos_u] == u_data[start_pos] && start_pos < u_data_pos && current_pos_u <= last_pos)
+                    printf("%02X ", (unsigned char) u_data[u_data_pos + i]);
+                }
+                printf("\n");*/
+                while (searching_pos < u_data_pos && current_pos_u <= last_pos)
+                {
+                    while (u_data[current_pos_u] != u_data[searching_pos] && searching_pos < u_data_pos)
+                        searching_pos++;
+                    search_start = searching_pos;
+                    while (u_data[current_pos_u] == u_data[searching_pos] && searching_pos < u_data_pos && current_pos_u <= last_pos)
                     {
                         copied_size++;
                         current_pos_u++;
-                        start_pos++;
+                        searching_pos++;
                     }
                     if (copied_size > data_size_taken[D_CMD_COPY_EXISTING])
                     {
-                        start_data -= start;
-                        s_debug("-Found repeat of %d at %d\n", copied_size, start_data);
+                        search_start -= start;
+                        s_debug("-Found repeat of %d at %d\n", copied_size, search_start);
                         data_size_taken[D_CMD_COPY_EXISTING] = copied_size;
-                        cmd_args[D_CMD_COPY_EXISTING][0] = start_data & 0xFF;
-                        cmd_args[D_CMD_COPY_EXISTING][1] = start_data >> 8;
+                        cmd_args[D_CMD_COPY_EXISTING][0] = search_start & 0xFF;
+                        cmd_args[D_CMD_COPY_EXISTING][1] = search_start >> 8;
                     }
+                    current_pos_u = u_data_pos;
                     copied_size = 0;
                 }
 
@@ -455,14 +483,17 @@ char*	compress(const char* u_data, const size_t start, const unsigned int lenght
         *compressed_size = create_compression_string(compressed_chain_start->next, compressed_data);
         unsigned int p;
         unsigned int k;
-        char *uncomp = decompress(compressed_data, 0, &p, &k);
+        char *uncomp = alttp_decompress(compressed_data, 0, &p, &k);
+        debug_str = speHexString(uncomp, p);
 
-        printf("Compressed data so far : %s\n", speHexString(uncomp, p));
+        printf("Compressed data so far : %s\n", debug_str);
+        free(debug_str);
         if (memcmp(uncomp, u_data, p) != 0)
         {
             printf("Compressed data does not match uncompressed data at %d\n", u_data_pos);
             return NULL;
         }
+        free(uncomp);
 #endif
     }
     compressed_chain = compressed_chain_start->next;
@@ -475,5 +506,6 @@ char*	compress(const char* u_data, const size_t start, const unsigned int lenght
     // First is a dumb place holder
     merge_copy(compressed_chain_start->next);
     *compressed_size = create_compression_string(compressed_chain_start->next, compressed_data);
+    free_compression_chain(compressed_chain);
     return compressed_data;
 }

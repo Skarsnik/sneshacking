@@ -25,41 +25,41 @@ void	testValidCommandDecompress(CuTest* tc)
     char simplecopy_i[4] = {BUILD_HEADER(0, 2), 42, 69, 0xFF};
     char simplecopy_o[2] = {42, 69};
     CuAssertDataEquals_Msg(tc, "Simple copy",
-		       simplecopy_o, 2, decompress(simplecopy_i, 0, &size, &c_size));
+               simplecopy_o, 2, alttp_decompress(simplecopy_i, 0, &size, &c_size));
     CuAssertIntEquals(tc, 2, size);
 
     char simpleset_i[4] = {BUILD_HEADER(1, 2), 42, 0xFF};
     char simpleset_o[2] = {42, 42};
     CuAssertDataEquals_Msg(tc, "Simple Set",
-		       simpleset_o, 2, decompress(simpleset_i, 0, &size, &c_size));
+               simpleset_o, 2, alttp_decompress(simpleset_i, 0, &size, &c_size));
     CuAssertIntEquals(tc, 2, size);
 
     //Command 2
     char simplecmd2_i[4] = {BUILD_HEADER(2, 6), 42, 69, 0xFF};
     char simplecmd2_o[6] = {42, 69, 42, 69, 42, 69};
     CuAssertDataEquals_Msg(tc, "Simple command 2 (ABAB..)",
-		       simplecmd2_o, 6, decompress(simplecmd2_i, 0, &size, &c_size));
+               simplecmd2_o, 6, alttp_decompress(simplecmd2_i, 0, &size, &c_size));
     CuAssertIntEquals(tc, 6, size);
 
    /* // Command 2 with uneven size
     char simplecmd2_p_i[4] = {BUILD_HEADER(2, 7), 42, 69, 0xFF};
     char simplecmd2_p_o[7] = {42, 69, 42, 69, 42, 69, 42};
     CuAssertDataEquals_Msg(tc, "Simple command 2 uneven size",
-		       simplecmd2_p_o, 7, decompress(simplecmd2_p_i, 0, &size));
+               simplecmd2_p_o, 7, alttp_alttp_decompress(simplecmd2_p_i, 0, &size));
     CuAssertIntEquals(tc, 7, size); */
 
     //Command 3
     char simplecmd3_i[3] = {BUILD_HEADER(3, 5), 42, 0xFF};
     char simplecmd3_o[7] = {42, 43, 44, 45, 46};
     CuAssertDataEquals_Msg(tc, "Simple command 3 inc (A4->ABCD)",
-		       simplecmd3_o, 5, decompress(simplecmd3_i, 0, &size, &c_size));
+               simplecmd3_o, 5,alttp_decompress(simplecmd3_i, 0, &size, &c_size));
     CuAssertIntEquals(tc, 5, size);
 
     //Command 4
     char simplecmd4_i[9] = {BUILD_HEADER(0, 4), 1, 2, 42, 69, BUILD_HEADER(4, 3), 01, 00, 0xFF};
     char simplecmd4_o[7] = {1, 2, 42, 69, 2, 42, 69};
     CuAssertDataEquals_Msg(tc, "Simple command 4, recopy data from u data",
-			   simplecmd4_o, 7, decompress(simplecmd4_i, 0, &size, &c_size));
+               simplecmd4_o, 7, alttp_decompress(simplecmd4_i, 0, &size, &c_size));
     CuAssertIntEquals(tc, 7, size);
 }
 
@@ -71,7 +71,7 @@ void	testMixingCommand(CuTest* tc)
     char random1_i[11] = {BUILD_HEADER(1, 3), 42, BUILD_HEADER(0, 4), 1, 2, 3, 4, BUILD_HEADER(2, 2), 11, 22, 0xFF};
     char random1_o[9] = {42, 42, 42, 1, 2, 3, 4, 11, 22};
     CuAssertDataEquals_Msg(tc, "Mixing command (0, 1, 2)",
-			   random1_o, 9, decompress(random1_i, 0, &size, &c_size));
+               random1_o, 9, alttp_decompress(random1_i, 0, &size, &c_size));
     CuAssertIntEquals(tc, 9, size);
 }
 
@@ -85,7 +85,7 @@ void	testExtendedHeaderDecompress(CuTest* tc)
         extendedcmd_o[i] = 42;
     }
     CuAssertDataEquals_Msg(tc, "Extended header test, test set size 200",
-			   extendedcmd_o, 200, decompress(extendedcmd_i, 0, &size, &c_size));
+               extendedcmd_o, 200, alttp_decompress(extendedcmd_i, 0, &size, &c_size));
     CuAssertIntEquals(tc, 200, size);
     free(extendedcmd_o);
 
@@ -95,7 +95,7 @@ void	testExtendedHeaderDecompress(CuTest* tc)
       extendedcmd_o[i] = 42;
     }
     CuAssertDataEquals_Msg(tc, "Extended header test, test set size 400",
-			   extendedcmd_o, 400, decompress(extendedcmd2_i, 0, &size, &c_size));
+               extendedcmd_o, 400, alttp_decompress(extendedcmd2_i, 0, &size, &c_size));
     
 }
 
@@ -107,32 +107,32 @@ void	testCompressionSingle(CuTest* tc)
   char single_set_expected[3] = {BUILD_HEADER(1, 5), 42, 0xFF};
   
   CuAssertDataEquals_Msg(tc, "Single compression, single set",
-			    single_set_expected, 3, compress(single_set, 0, 5, &compress_size));
+                single_set_expected, 3, alttp_compress(single_set, 0, 5, &compress_size));
   CuAssertIntEquals(tc, 3, compress_size);
 
   char single_word[6] = {42, 1, 42, 1, 42, 1};
   char single_word_expected[4] = {BUILD_HEADER(2, 6), 42, 1, 0xFF};
   CuAssertDataEquals_Msg(tc, "Single compression, alternating byte",
-			    single_word_expected, 4, compress(single_word, 0, 6, &compress_size));
+                single_word_expected, 4, alttp_compress(single_word, 0, 6, &compress_size));
   
   char single_inc[3] = {1, 2, 3};
   char single_inc_expected[3] = {BUILD_HEADER(3, 3), 1, 0xFF};
   CuAssertDataEquals_Msg(tc, "Single compression, increasing byte",
-			    single_inc_expected, 3, compress(single_inc, 0, 3, &compress_size));
+                single_inc_expected, 3, alttp_compress(single_inc, 0, 3, &compress_size));
   
   char single_copy[4] = {3, 10, 7, 20};
   char single_copy_expected[6] = {BUILD_HEADER(0, 4), 3, 10, 7, 20, 0xFF};
   CuAssertDataEquals_Msg(tc, "Single compression, direct copy",
-			    single_copy_expected, 6, compress(single_copy, 0, 4, &compress_size));
+                single_copy_expected, 6, alttp_compress(single_copy, 0, 4, &compress_size));
   
   char single_copy_repeat[8] = {3, 10, 7, 20, 3, 10, 7, 20};
   char single_copy_repeat_expected[9] = {BUILD_HEADER(0, 4), 3, 10, 7, 20, BUILD_HEADER(4, 4), 0, 0, 0xFF};
   CuAssertDataEquals_Msg(tc, "Single compression, direct copy",
-			    single_copy_repeat_expected, 9, compress(single_copy_repeat, 0, 8, &compress_size));
+                single_copy_repeat_expected, 9, alttp_compress(single_copy_repeat, 0, 8, &compress_size));
   char overflow_inc[4] = {0xFE, 0xFF, 0, 1};
   char overflow_inc_expected[3] = {BUILD_HEADER(3, 4), 0xFE, 0xFF};
   CuAssertDataEquals_Msg(tc, "Inc overflowying",
-			    overflow_inc_expected, 3, compress(overflow_inc, 0, 4, &compress_size));
+                overflow_inc_expected, 3, alttp_compress(overflow_inc, 0, 4, &compress_size));
   
  
 }
@@ -144,13 +144,13 @@ void	testSimpleMixCompression(CuTest* tc)
   
   char repeat_and_inc_copy_expected[] = {BUILD_HEADER(1, 4), 5, BUILD_HEADER(3, 6), 6, BUILD_HEADER(0, 1), 5, 0xFF};
   CuAssertDataEquals_Msg(tc, "Mixing, repeat, inc, trailing copy",
-			    repeat_and_inc_copy_expected, 7, compress(to_compress_string, 0, 11, &compress_size));
+                repeat_and_inc_copy_expected, 7, alttp_compress(to_compress_string, 0, 11, &compress_size));
   char inc_word_intra_copy_expected[] = {BUILD_HEADER(3, 7), 5, BUILD_HEADER(2, 6), 5, 2, BUILD_HEADER(4, 8), 5, 0, 0xFF};
   CuAssertDataEquals_Msg(tc, "Mixing, inc, alternate, intra copy",
-			    inc_word_intra_copy_expected, 9, compress(to_compress_string, 3, 21, &compress_size));
+                inc_word_intra_copy_expected, 9, alttp_compress(to_compress_string, 3, 21, &compress_size));
   char all_expected[] = {BUILD_HEADER(1, 4), 5, BUILD_HEADER(3, 6), 6, BUILD_HEADER(2, 6), 5, 2, BUILD_HEADER(4, 8), 8, 0, BUILD_HEADER(0, 4), 8, 10, 0, 5, 0xFF};
   CuAssertDataEquals_Msg(tc, "Mixing, inc, alternate, intra copy",
-			    all_expected, 16, compress(to_compress_string, 0, 28, &compress_size));
+                all_expected, 16, alttp_compress(to_compress_string, 0, 28, &compress_size));
 }
 
 void	testLenghtBorderCompression(CuTest* tc)
@@ -165,13 +165,13 @@ void	testLenghtBorderCompression(CuTest* tc)
   char extended_lenght_expected_1050[] = {0b11100111, 0xFF, 5, BUILD_HEADER(1, 26), 5, 0xFF};
   char extended_lenght_expected_2050[] = {0b11100111, 0xFF, 5, 0b11100111, 0xFF, 5, BUILD_HEADER(1, 2), 5, 0xFF};
   CuAssertDataEquals_Msg(tc, "Extended lenght, 42 repeat of 5",
-			 extended_lenght_expected_42, 4, compress(buffer, 0, 42, &compress_size));
+             extended_lenght_expected_42, 4, alttp_compress(buffer, 0, 42, &compress_size));
   CuAssertDataEquals_Msg(tc, "Extended lenght, 400 repeat of 5",
-			 extended_lenght_expected_400, 4, compress(buffer, 0, 400, &compress_size));
+             extended_lenght_expected_400, 4, alttp_compress(buffer, 0, 400, &compress_size));
   CuAssertDataEquals_Msg(tc, "Extended lenght, 1050 repeat of 5",
-			 extended_lenght_expected_1050, 6, compress(buffer, 0, 1050, &compress_size));
+             extended_lenght_expected_1050, 6, alttp_compress(buffer, 0, 1050, &compress_size));
   CuAssertDataEquals_Msg(tc, "Extended lenght, 2050 repeat of 5",
-			 extended_lenght_expected_2050, 9, compress(buffer, 0, 2050, &compress_size));
+             extended_lenght_expected_2050, 9, alttp_compress(buffer, 0, 2050, &compress_size));
   
   for (unsigned int i = 0; i < 3000; i += 2)
   {
@@ -180,7 +180,7 @@ void	testLenghtBorderCompression(CuTest* tc)
   }
   char hightlenght_word_1050[] = {0b11101011, 0xFF, 5, 6, BUILD_HEADER(2, 26), 5, 6, 0xFF};
   CuAssertDataEquals_Msg(tc, "Extended word copy",
-			 hightlenght_word_1050, 8, compress(buffer, 0, 1050, &compress_size));
+             hightlenght_word_1050, 8, alttp_compress(buffer, 0, 1050, &compress_size));
 }
 
 void	testCompressUncompress(CuTest* tc)
@@ -195,9 +195,9 @@ void	testCompressUncompress(CuTest* tc)
         return ;
     }
     read(fd, buffer, 32);
-    char* comdata = compress(buffer, 0, 32, &compress_size);
+    char* comdata = alttp_compress(buffer, 0, 32, &compress_size);
     CuAssertDataEquals_Msg(tc, "Compressing/Uncompress testtilebpp4.tl",
-			   buffer, 32, decompress(comdata, 0, &compress_size, &c_size));
+               buffer, 32, alttp_decompress(comdata, 0, &compress_size, &c_size));
 }
 
 CuSuite* StrUtilGetSuite() {
