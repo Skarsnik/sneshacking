@@ -29,6 +29,20 @@ addr_test_t tab_lorom_mirror[] = {
   {0xFD8001, 0x3E8001}
 };
 
+
+addr_test_t tab_hirom[] = {
+  {0x008200, 0x8200},
+  {0x109500, 0x109500},
+  {0x24AAAA, 0x24AAAA},
+  {0x451111, 0x051111}
+};
+
+addr_test_t tab_hirom_mirror[] = {
+  {0x808200, 0x8200},
+  {0xAFA451, 0x2FA451},
+  {0xC10200, 0x010200}
+};
+
 void	testLoROMToPC(CuTest* tc)
 {
   
@@ -46,9 +60,6 @@ void	testLoROMToPC(CuTest* tc)
       asprintf(&tmp, "LoROM: Mirroring test %02X:%04X -> %X", tab_lorom_mirror[i].snes_addr >> 16, tab_lorom_mirror[i].snes_addr & 0x00FFFF, tab_lorom_mirror[i].pc_addr);
       CuAssertIntEquals_Msg(tc, tmp, tab_lorom_mirror[i].pc_addr, rommapping_snes_to_pc(tab_lorom_mirror[i].snes_addr, LoROM, false));
     }
-    
-    
-    return;
 
     // Extra
 
@@ -61,10 +72,12 @@ void	testLoROMToPC(CuTest* tc)
 
 void	testLoROMToPCErrors(CuTest *tc)
 {
+    CuAssertIntEquals_Msg(tc, "LoROM: Errors 02:0200 -> WRAM",
+			  ROMMAPPING_LOCATION_WRAM, rommapping_snes_to_pc(0x020200, LoROM, false));
     CuAssertIntEquals_Msg(tc, "LoROM: Errors 01:4000 -> Reserved",
                           ROMMAPPING_LOCATION_SNES_RESERVED, rommapping_snes_to_pc(0x014000, LoROM, false));
-    CuAssertIntEquals_Msg(tc, "LoROM: Errors 08:0000 -> SRAM",
-                          ROMMAPPING_LOCATION_SRAM, rommapping_snes_to_pc(0x080000, LoROM, false));
+    CuAssertIntEquals_Msg(tc, "LoROM: Errors 08:0000 -> WRAM",
+                          ROMMAPPING_LOCATION_WRAM, rommapping_snes_to_pc(0x080000, LoROM, false));
     CuAssertIntEquals_Msg(tc, "LoROM: Errors 71:4000 -> SRAM",
                           ROMMAPPING_LOCATION_SRAM, rommapping_snes_to_pc(0x714000, LoROM, false));
     CuAssertIntEquals_Msg(tc, "LoROM: Errors FE:4000 -> SRAM",
@@ -83,11 +96,43 @@ void	testPCToLoROM(CuTest *tc)
     }
 }
 
+void	testHiROMtoPC(CuTest* tc)
+{
+  for (int i = 0; i < 4; i++)
+    {
+      char *tmp = NULL;
+      asprintf(&tmp, "HiROM: Simple test %02X:%04X -> %X", tab_hirom[i].snes_addr >> 16, tab_hirom[i].snes_addr & 0x00FFFF, tab_hirom[i].pc_addr);
+      CuAssertIntEquals_Msg(tc, tmp, tab_hirom[i].pc_addr, rommapping_snes_to_pc(tab_hirom[i].snes_addr, HiROM, false));
+    }
+  for (int i = 0; i < 3; i++)
+    {
+      char *tmp = NULL;
+      asprintf(&tmp, "HiROM: Mirroring test %02X:%04X -> %X", tab_hirom_mirror[i].snes_addr >> 16, tab_hirom_mirror[i].snes_addr & 0x00FFFF, tab_hirom_mirror[i].pc_addr);
+      CuAssertIntEquals_Msg(tc, tmp, tab_hirom_mirror[i].pc_addr, rommapping_snes_to_pc(tab_hirom_mirror[i].snes_addr, HiROM, false));
+    }
+}
+
+void	testHiROMtoPCErrors(CuTest* tc)
+{
+  CuAssertIntEquals_Msg(tc, "HiROM: Errors 02:0200 -> WRAM",
+			  ROMMAPPING_LOCATION_WRAM, rommapping_snes_to_pc(0x020200, HiROM, false));
+  CuAssertIntEquals_Msg(tc, "HiROM: Errors 01:4000 -> Reserved",
+                          ROMMAPPING_LOCATION_SNES_RESERVED, rommapping_snes_to_pc(0x014000, HiROM, false));
+  CuAssertIntEquals_Msg(tc, "HiROM: Errors 08:0000 -> WRAM",
+                          ROMMAPPING_LOCATION_WRAM, rommapping_snes_to_pc(0x080000, HiROM, false));
+  CuAssertIntEquals_Msg(tc, "HiROM: Errors 25:6050 -> SRAM",
+                          ROMMAPPING_LOCATION_SRAM, rommapping_snes_to_pc(0x256050, HiROM, false));
+  CuAssertIntEquals_Msg(tc, "HiROM: Errors 7E:8000 -> WRAM",
+                          ROMMAPPING_LOCATION_WRAM, rommapping_snes_to_pc(0x7E8000, HiROM, false));
+}
+
 CuSuite* StrUtilGetSuite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, testLoROMToPC);
     SUITE_ADD_TEST(suite, testLoROMToPCErrors);
     SUITE_ADD_TEST(suite, testPCToLoROM);
+    SUITE_ADD_TEST(suite, testHiROMtoPC);
+    SUITE_ADD_TEST(suite, testHiROMtoPCErrors);
     return suite;
 }
 
