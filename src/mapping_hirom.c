@@ -57,5 +57,5 @@ int	hirom_snes_to_pc(const unsigned int snes_addr, char **info)
 
 int	hirom_pc_to_snes(const unsigned int pc_addr)
 {
-  
+  return 0;
 }
