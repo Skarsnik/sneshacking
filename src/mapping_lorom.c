@@ -37,23 +37,23 @@ int	lorom_snes_to_pc(const unsigned int snes_addr, char** info)
     *info = "SNES Reserved";
     return ROMMAPPING_LOCATION_SNES_RESERVED;
   }
-  if ((((bank >= 0x70 && bank <= 0x7D) || bank == 0xFE || bank == 0xFF) && offset < 0x8000) ||
-       (bank >= 0x00 && bank < 0x3F && offset < 0x2000)
-  )
+  if ((((bank >= 0x70 && bank <= 0x7D) || bank == 0xFE || bank == 0xFF) && offset < 0x8000))
   {
     *info = "SRAM";
     return ROMMAPPING_LOCATION_SRAM;
   }
   if (bank == 0x7E || bank == 0x7F || 
-     (bank == 0x00 && offset < 0x2000)
+     (bank >= 0x00 && bank <= 0x3F && offset < 0x2000)
   )
   {
     *info = "WRAM section";
     return ROMMAPPING_LOCATION_WRAM;
   }
-
+  
   if (bank >= 0x40 && bank <= 0x6F && offset < 0x8000)
     return bank * 0x8000 + offset;
+  if (bank == 0xFE || bank == 0xFF) // this work as if 7E was regular bank
+    bank -= 0xFE - 0x7E;
   return bank * 0x8000 + (offset - 0x8000);
 }
 
