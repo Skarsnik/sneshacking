@@ -24,8 +24,34 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 extern "C" {
 #endif
 
+/* These hold the error string returned by the 2 functions */
 
-char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght);
+extern char* alttp_decompression_error;
+extern char* alttp_compression_error;
+
+/*
+ * This function decompress the c_data string starting at start and return the decompressed data.
+ * returns NULL if an error occured.
+ *
+ * if max_lenght is set to 0 the function will stop when reaching the 'compression end' marker (header == 0xFF)
+ * otherwise it will stop with an error if max_lenght is reached.
+ *
+ * uncompressed_data_size is the resulting size of the decompressed string.
+ * compressed_lenght is the lenght of the compressed data, meaning the number of bytes read in c_data.
+ */
+
+
+char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght);
+
+
+/*
+ * This function compress u_data following the compression format used by Zelda3: a link to the past
+ * and return the resulting string or NULL if an error occured.
+ *
+ * start is the starting offset in u_data to compress.
+ * lenght is the lenght of u_data to compress
+ * compressed_size is the resulting size of the compressed string.
+ */
 char*	alttp_compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size);
 
 

@@ -25,20 +25,20 @@ void	testValidCommandDecompress(CuTest* tc)
     char simplecopy_i[4] = {BUILD_HEADER(0, 2), 42, 69, 0xFF};
     char simplecopy_o[2] = {42, 69};
     CuAssertDataEquals_Msg(tc, "Simple copy",
-               simplecopy_o, 2, alttp_decompress(simplecopy_i, 0, &size, &c_size));
+               simplecopy_o, 2, alttp_decompress(simplecopy_i, 0, 4, &size, &c_size));
     CuAssertIntEquals(tc, 2, size);
 
     char simpleset_i[4] = {BUILD_HEADER(1, 2), 42, 0xFF};
     char simpleset_o[2] = {42, 42};
     CuAssertDataEquals_Msg(tc, "Simple Set",
-               simpleset_o, 2, alttp_decompress(simpleset_i, 0, &size, &c_size));
+               simpleset_o, 2, alttp_decompress(simpleset_i, 0, 4, &size, &c_size));
     CuAssertIntEquals(tc, 2, size);
 
     //Command 2
     char simplecmd2_i[4] = {BUILD_HEADER(2, 6), 42, 69, 0xFF};
     char simplecmd2_o[6] = {42, 69, 42, 69, 42, 69};
     CuAssertDataEquals_Msg(tc, "Simple command 2 (ABAB..)",
-               simplecmd2_o, 6, alttp_decompress(simplecmd2_i, 0, &size, &c_size));
+               simplecmd2_o, 6, alttp_decompress(simplecmd2_i, 0, 4, &size, &c_size));
     CuAssertIntEquals(tc, 6, size);
 
    /* // Command 2 with uneven size
@@ -52,14 +52,14 @@ void	testValidCommandDecompress(CuTest* tc)
     char simplecmd3_i[3] = {BUILD_HEADER(3, 5), 42, 0xFF};
     char simplecmd3_o[7] = {42, 43, 44, 45, 46};
     CuAssertDataEquals_Msg(tc, "Simple command 3 inc (A4->ABCD)",
-               simplecmd3_o, 5,alttp_decompress(simplecmd3_i, 0, &size, &c_size));
+               simplecmd3_o, 5,alttp_decompress(simplecmd3_i, 0, 3, &size, &c_size));
     CuAssertIntEquals(tc, 5, size);
 
     //Command 4
     char simplecmd4_i[9] = {BUILD_HEADER(0, 4), 1, 2, 42, 69, BUILD_HEADER(4, 3), 01, 00, 0xFF};
     char simplecmd4_o[7] = {1, 2, 42, 69, 2, 42, 69};
     CuAssertDataEquals_Msg(tc, "Simple command 4, recopy data from u data",
-               simplecmd4_o, 7, alttp_decompress(simplecmd4_i, 0, &size, &c_size));
+               simplecmd4_o, 7, alttp_decompress(simplecmd4_i, 0, 9, &size, &c_size));
     CuAssertIntEquals(tc, 7, size);
 }
 
@@ -71,7 +71,7 @@ void	testMixingCommand(CuTest* tc)
     char random1_i[11] = {BUILD_HEADER(1, 3), 42, BUILD_HEADER(0, 4), 1, 2, 3, 4, BUILD_HEADER(2, 2), 11, 22, 0xFF};
     char random1_o[9] = {42, 42, 42, 1, 2, 3, 4, 11, 22};
     CuAssertDataEquals_Msg(tc, "Mixing command (0, 1, 2)",
-               random1_o, 9, alttp_decompress(random1_i, 0, &size, &c_size));
+               random1_o, 9, alttp_decompress(random1_i, 0, 11, &size, &c_size));
     CuAssertIntEquals(tc, 9, size);
 }
 
@@ -85,7 +85,7 @@ void	testExtendedHeaderDecompress(CuTest* tc)
         extendedcmd_o[i] = 42;
     }
     CuAssertDataEquals_Msg(tc, "Extended header test, test set size 200",
-               extendedcmd_o, 200, alttp_decompress(extendedcmd_i, 0, &size, &c_size));
+               extendedcmd_o, 200, alttp_decompress(extendedcmd_i, 0, 4, &size, &c_size));
     CuAssertIntEquals(tc, 200, size);
     free(extendedcmd_o);
 
@@ -95,7 +95,7 @@ void	testExtendedHeaderDecompress(CuTest* tc)
       extendedcmd_o[i] = 42;
     }
     CuAssertDataEquals_Msg(tc, "Extended header test, test set size 400",
-               extendedcmd_o, 400, alttp_decompress(extendedcmd2_i, 0, &size, &c_size));
+               extendedcmd_o, 400, alttp_decompress(extendedcmd2_i, 0, 4, &size, &c_size));
     
 }
 
@@ -197,7 +197,7 @@ void	testCompressUncompress(CuTest* tc)
     read(fd, buffer, 32);
     char* comdata = alttp_compress(buffer, 0, 32, &compress_size);
     CuAssertDataEquals_Msg(tc, "Compressing/Uncompress testtilebpp4.tl",
-               buffer, 32, alttp_decompress(comdata, 0, &compress_size, &c_size));
+               buffer, 32, alttp_decompress(comdata, 0, 0, &compress_size, &c_size));
 }
 
 CuSuite* StrUtilGetSuite() {

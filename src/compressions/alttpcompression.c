@@ -21,6 +21,7 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "alttpcompression.h"
 
 //#define MY_DEBUG 1
@@ -42,6 +43,20 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 #define D_MAX_NORMAL_LENGHT 32
 #define D_MAX_LENGHT 1024
 
+char* alttp_decompression_error = NULL;
+char* alttp_compression_error = NULL;
+
+static char*   my_asprintf(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    size_t needed = vsnprintf(NULL, 0, fmt, args);
+    char  *buffer = malloc(needed + 1);
+    vsnprintf(buffer, needed + 1, fmt, args);
+    return buffer;
+}
+
 /*
  * The compression format follow a simple pattern:
  * first byte represente a header. The header represent a command and a lenght
@@ -49,14 +64,19 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
  * Then you have a new header byte and so on, until you hit a header with the value FF
  */
 
-char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
+
+char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
 {
     char*		u_data;
     unsigned char	header;
     unsigned int	c_data_pos;
     unsigned int	u_data_pos;
     unsigned int	allocated_memory;
+    unsigned int	max_offset;
 
+    max_offset = 0;
+    if (max_lenght != 0)
+        max_offset = start + max_lenght;
     header = c_data[start];
     u_data = (char *) malloc(INITIAL_ALLOC_SIZE); // No way to know the final size, we will probably realloc if needed
     allocated_memory = INITIAL_ALLOC_SIZE;
@@ -86,16 +106,30 @@ char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned in
         lenght++;
 
         s_debug("header %2X - Command : %d , lenght : %d\n", header, command, lenght);
-
-        if (u_data_pos + lenght > allocated_memory) // Adjust allocated memory
+        if (c_data_pos >= max_offset && max_offset != 0)
         {
-            s_debug("Memory get reallocated by %d\n", INITIAL_ALLOC_SIZE);
-            u_data = realloc(u_data, allocated_memory + INITIAL_ALLOC_SIZE);
+            alttp_decompression_error = "Compression string exceed the max_lenght specified";
+            goto error;
+        }
+        if (u_data_pos + lenght + 1 > allocated_memory) // Adjust allocated memory
+        {
+            s_debug("Memory get reallocated by %d was %d\n", INITIAL_ALLOC_SIZE, allocated_memory);
+            u_data = (char*) realloc(u_data, allocated_memory + INITIAL_ALLOC_SIZE);
+            if (u_data == NULL)
+            {
+                alttp_decompression_error = "Can't realloc memory";
+                return NULL;
+            }
             allocated_memory += INITIAL_ALLOC_SIZE;
         }
         switch (command)
         {
         case D_CMD_COPY: { // No compression, data are copied as
+            if (max_offset != 0 && c_data_pos + 1 + lenght > max_offset)
+            {
+                alttp_decompression_error = my_asprintf("A copy command exceed the available data %d > %d (max_lenght specified)\n", c_data_pos + 1 + lenght, max_offset);
+                goto error;
+            }
             memcpy(u_data + u_data_pos, c_data + c_data_pos + 1, lenght);
             c_data_pos += lenght + 1;
             break;
@@ -125,19 +159,31 @@ char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned in
             break;
         }
         case D_CMD_COPY_EXISTING: { // Next 2 bytes form an offset to pick data from the output
+            //printf("%02X,%02X\n", (unsigned char) c_data[c_data_pos + 1], (unsigned char) c_data[c_data_pos + 2]);
             unsigned short offset = (unsigned char)(c_data[c_data_pos + 1]) | ((unsigned char) (c_data[c_data_pos + 2]) << 8);
             if (offset > u_data_pos)
             {
-                fprintf(stderr, "Offset for command copy existing is larger than the current position\n");
-                return NULL;
+                alttp_decompression_error = my_asprintf("Offset for command copy existing is larger than the current position (Offset : 0x%04X | Pos : 0x%06X\n", offset, u_data_pos);
+                goto error;
+            }
+            if (u_data_pos + lenght >= allocated_memory)
+            {
+                s_debug("Memory get reallocated by a copy,  %d was %d\n", INITIAL_ALLOC_SIZE, allocated_memory);
+                u_data = (char*) realloc(u_data, allocated_memory + INITIAL_ALLOC_SIZE);
+                if (u_data == NULL)
+                {
+                    alttp_decompression_error = "Can't realloc memory";
+                    return NULL;
+                }
+                allocated_memory += INITIAL_ALLOC_SIZE;
             }
             memcpy(u_data + u_data_pos, u_data + offset, lenght);
             c_data_pos += 3;
             break;
         }
         default: {
-            fprintf(stderr, "Invalid command in the header for decompression\n");
-            return NULL;
+            alttp_compression_error = "Invalid command in the header for decompression";
+            goto error;
         }
 
         }
@@ -147,6 +193,10 @@ char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned in
     *uncompressed_data_size = u_data_pos;
     *compressed_lenght = c_data_pos + 1;
     return u_data;
+    // yay goto usage :)
+    error:
+      free(u_data);
+      return NULL;
 }
 
 #define MY_BUILD_HEADER(command, lenght) (command << 5) + ((lenght) - 1)
@@ -326,7 +376,7 @@ char*	alttp_compress(const char* u_data, const size_t start, const unsigned int 
     s_debug("==Compressing %s ==\n", debug_str);
     free(debug_str);
 #endif
-        // we will realloc later
+    // we will realloc later
     char* compressed_data = (char*) malloc(lenght);
     compression_piece* compressed_chain = new_compression_piece(42, 42, "aa", 42);
     compression_piece* compressed_chain_start = compressed_chain;
@@ -395,12 +445,12 @@ char*	alttp_compress(const char* u_data, const size_t start, const unsigned int 
                 unsigned int current_pos_u = u_data_pos;
                 unsigned int copied_size = 0;
                 unsigned int search_start = start;
-               /* printf("Searching for : ");
-                for (unsigned int i = 0; i < 8; i++)
-                {
-                    printf("%02X ", (unsigned char) u_data[u_data_pos + i]);
-                }
-                printf("\n");*/
+                /* printf("Searching for : ");
+                 for (unsigned int i = 0; i < 8; i++)
+                 {
+                     printf("%02X ", (unsigned char) u_data[u_data_pos + i]);
+                 }
+                 printf("\n");*/
                 while (searching_pos < u_data_pos && current_pos_u <= last_pos)
                 {
                     while (u_data[current_pos_u] != u_data[searching_pos] && searching_pos < u_data_pos)
@@ -478,7 +528,6 @@ char*	alttp_compress(const char* u_data, const size_t start, const unsigned int 
         }
         if (u_data_pos > last_pos)
             break;
-        //sleep(1);
 #ifdef MY_DEBUG
         *compressed_size = create_compression_string(compressed_chain_start->next, compressed_data);
         unsigned int p;
@@ -496,6 +545,7 @@ char*	alttp_compress(const char* u_data, const size_t start, const unsigned int 
         free(uncomp);
 #endif
     }
+#ifdef MY_DEBUG
     compressed_chain = compressed_chain_start->next;
     while (compressed_chain != NULL)
     {
@@ -503,6 +553,7 @@ char*	alttp_compress(const char* u_data, const size_t start, const unsigned int 
         print_compression_piece(compressed_chain);
         compressed_chain = compressed_chain->next;
     }
+#endif
     // First is a dumb place holder
     merge_copy(compressed_chain_start->next);
     *compressed_size = create_compression_string(compressed_chain_start->next, compressed_data);
