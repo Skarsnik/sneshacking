@@ -560,7 +560,7 @@ char*	alttp_compress(const char* u_data, const size_t start, const unsigned int 
 #endif
             if (memcmp(uncomp, u_data + start, p) != 0)
             {
-                printf("Compressed data does not match uncompressed data at %d\n", u_data_pos - start);
+                printf("Compressed data does not match uncompressed data at %d\n", (unsigned int) u_data_pos - start);
                 return NULL;
             }
             free(uncomp);
