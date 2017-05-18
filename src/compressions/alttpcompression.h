@@ -24,6 +24,12 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 extern "C" {
 #endif
 
+#include <stdbool.h>
+/* Enable this to force the compression to check if compressed data still match the uncompressed data
+ **/  
+
+extern bool  alttp_compression_sanity_check;
+
 /* These hold the error string returned by the 2 functions */
 
 extern char* alttp_decompression_error;
