@@ -272,7 +272,7 @@ void	extract_gfx(s_location* locations, bool single_file, const char* allfilenam
         } else {
             sprintf(filename, "SGFX%02X.bin", i);
             gfx_file = my_fopen(filename, "w");
-			verbose_printf("Creating %s file from index %02X, location : %06X\n", filename, i, location.address);
+            verbose_printf("Creating %s file from index %02X, location : %06X\n", filename, i, location.address);
             fwrite(to_write, 1, write_lenght, gfx_file);
             fclose(gfx_file);
         }
@@ -280,30 +280,30 @@ void	extract_gfx(s_location* locations, bool single_file, const char* allfilenam
     }
     // Meh solution
     if (locations == gfx_locations)
-	{
-	  rom_fseek(rom_stream, FONT_SPRITE_LOCATION);
-	  fread(read_buffer, 1, 2048 * 2, rom_stream);
-	  if (single_file)
-		fwrite(read_buffer, 1, 2048 * 2, gfx_file);
-	  else
-	  {
-		verbose_printf("Creating SGFXFONT.bin from font location (%06X)\n", FONT_SPRITE_LOCATION);
-		gfx_file = my_fopen("SGFXFONT.bin", "w");
-		fwrite(read_buffer, 1, 2048 * 2, gfx_file);
-		fclose(gfx_file);
-	  }
-	  rom_fseek(rom_stream, LINK_SPRITE_LOCATION);
-	  fread(read_buffer, 1, 28672, rom_stream);
-	  if (single_file)
-		fwrite(read_buffer, 1, 28672, gfx_file);
-	  else
-	  {
-		verbose_printf("Creating SGFXLINK.bin from link sprite location (%06X)\n", LINK_SPRITE_LOCATION);
-		gfx_file = my_fopen("SGFXLINK.bin", "w");
-		fwrite(read_buffer, 1, 28672, gfx_file);
-		fclose(gfx_file);
-	  }
-	}
+    {
+        rom_fseek(rom_stream, FONT_SPRITE_LOCATION);
+        fread(read_buffer, 1, 2048 * 2, rom_stream);
+        if (single_file)
+            fwrite(read_buffer, 1, 2048 * 2, gfx_file);
+        else
+        {
+            verbose_printf("Creating SGFXFONT.bin from font location (%06X)\n", FONT_SPRITE_LOCATION);
+            gfx_file = my_fopen("SGFXFONT.bin", "w");
+            fwrite(read_buffer, 1, 2048 * 2, gfx_file);
+            fclose(gfx_file);
+        }
+        rom_fseek(rom_stream, LINK_SPRITE_LOCATION);
+        fread(read_buffer, 1, 28672, rom_stream);
+        if (single_file)
+            fwrite(read_buffer, 1, 28672, gfx_file);
+        else
+        {
+            verbose_printf("Creating SGFXLINK.bin from link sprite location (%06X)\n", LINK_SPRITE_LOCATION);
+            gfx_file = my_fopen("SGFXLINK.bin", "w");
+            fwrite(read_buffer, 1, 28672, gfx_file);
+            fclose(gfx_file);
+        }
+    }
     if (single_file)
         fclose(gfx_file);
     fclose(rom_stream);
@@ -318,6 +318,7 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
     s_location location;
     char	read_buffer[500000];
     unsigned int start = 0;
+    unsigned int font_link_offset = 2048 * 2; // offset in the gfx file
 
     FILE* gfx_file = my_fopen(inject_file, "r");
     FILE* rom_stream = my_fopen(rom_file, "r+");
@@ -325,27 +326,31 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
 
     if (locations == zcompress_gfx_locations)
     {
-        fseek(gfx_file, (0xDE + 1) * 2048, SEEK_SET);
-        fread(read_buffer, 1, 28672, gfx_file);
-        rom_fseek(rom_stream, 0x80000);
-        if (!simulation)
-            fwrite(read_buffer, 1, 28672, rom_stream);
-        fseek(gfx_file, 0xDD * 2048, SEEK_SET);
-        fread(read_buffer, 1, 2048 * 2, gfx_file);
-        rom_fseek(rom_stream, 0x70000);
-        if (!simulation)
-            fwrite(read_buffer, 1, 2048 * 2, rom_stream);
         start = 2;
+        font_link_offset = 0;
     }
+    verbose_printf("Injecting font and link GFX first\n");
+    fseek(gfx_file, (0xDE + 1) * 2048 + font_link_offset, SEEK_SET);
+    fread(read_buffer, 1, 28672, gfx_file);
+    rom_fseek(rom_stream, LINK_SPRITE_LOCATION);
+    if (!simulation)
+        fwrite(read_buffer, 1, 28672, rom_stream);
+    fseek(gfx_file, 0xDD * 2048 + font_link_offset, SEEK_SET);
+    fread(read_buffer, 1, 2048 * 2, gfx_file);
+    rom_fseek(rom_stream, FONT_SPRITE_LOCATION);
+    if (!simulation)
+        fwrite(read_buffer, 1, 2048 * 2, rom_stream);
+
     rom_fseek(rom_stream, i_start);
     sort_locations(locations, gfx_locations_sorted);
+    verbose_printf("Injecting other GFX\n");
     for (unsigned int i = start; i < NB_POINTER_IN_TABLE; i++)
     {
         char *converted = NULL;
         unsigned int converted_size;
         location = gfx_locations_sorted[i];
-        printf("=====%02X | %02X=====\n", i, location.index);
-        print_location(location);
+        //printf("=====%02X | %02X=====\n", i, location.index);
+        //print_location(location);
         if (location.compression)
         {
             unsigned int compressed_lenght;
@@ -356,7 +361,7 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
             if (location.bpp == 3)
             {
                 converted = convert_4bpp_to_3bpp(read_buffer, 2048, &converted_size);
-                printf("Converted size : %d\n", converted_size);
+                //printf("Converted size : %d\n", converted_size);
                 compressed = alttp_compress(converted, 0, converted_size, &compressed_lenght);
             }
             if (location.bpp == 2)
@@ -368,10 +373,10 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
                 fprintf(stderr, "Error with compression\n");
                 exit(1);
             }
-            if (1)
+            unsigned int save_pos = ftell(rom_stream);
+            if (0)
             {
                 printf("Compressed lenght :%d\n", compressed_lenght);
-                unsigned int save_pos = ftell(rom_stream);
                 printf("Before %d\n", save_pos);
                 rom_fseek(rom_stream, location.address);
                 fread(read_buffer, 1, 2048, rom_stream);
@@ -399,7 +404,7 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
                 fseek(rom_stream, save_pos, SEEK_SET);
                 printf("After %ld\n", ftell(rom_stream));
             }
-            printf("Writing at %06X, max_lenght = %d, written = %d\n", location.address, location.max_lenght ,compressed_lenght);
+            verbose_printf("Writing at %06X, %d compressed bytes written\n", save_pos, compressed_lenght);
             insertion_size[i] = compressed_lenght;
             if (!simulation)
                 fwrite(compressed, 1, compressed_lenght, rom_stream);
@@ -412,6 +417,7 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
                 fseek(gfx_file, location.index * 2048, SEEK_SET);
                 fread(read_buffer, 1, 2048, gfx_file);
                 converted = convert_4bpp_to_3bpp(read_buffer, 2048, &converted_size);
+                verbose_printf("Writing at %06X,  %d uncompressed 3bpp bytes written\n", ftell(rom_stream), converted_size);
                 if (!simulation)
                     fwrite(converted, 1, converted_size, rom_stream);
                 insertion_size[i] = converted_size;
@@ -421,24 +427,31 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
     fclose(rom_stream);
 }
 
-void	create_pointer_table(unsigned int i_start, bool simulation)
+void	create_pointer_table(unsigned int i_start, bool zmode, bool simulation)
 {
+    static bool first = true;
     unsigned int pc_addr = i_start;
+    unsigned int start = 0;
     unsigned int snes_addr = lorom_pc_to_snes(pc_addr);
+    if (zmode)
+        start = 2;
     FILE* rom_stream = my_fopen(rom_file, "r+");
-    for (unsigned int i = 3; i < NB_POINTER_IN_TABLE; i++)
+    for (unsigned int i = start; i < NB_POINTER_IN_TABLE; i++)
     {
         s_location location = gfx_locations_sorted[i];
         unsigned int index = location.index;
-        pc_addr += insertion_size[i - 1];
+        if (i != start)
+            pc_addr += insertion_size[i - 1];
         snes_addr = lorom_pc_to_snes(pc_addr);
-        printf("Old addresse : %06X - New addresse : %06X\n", location.address, pc_addr);
+        //printf("Old addresse : %06X - New addresse : %06X\n", location.address, pc_addr);
         unsigned char p1, p2, p3;
         p3 = (snes_addr & 0xFF);
         p2 = (snes_addr & 0xFF00) >> 8;
         p1 = (snes_addr & 0xFF0000) >> 16;
-        printf("--SNES addr : %06X  Writing at %02X : %02X - %02X : %02X - %02X : %02X\n",  snes_addr,
-               POINTER_TABLE_START + index, p1, POINTER_TABLE_START + 223 + index, p2, POINTER_TABLE_START + 446 + index, p3);
+        //printf("--SNES addr : %06X  Writing at %02X : %02X - %02X : %02X - %02X : %02X\n",  snes_addr,
+        //       POINTER_TABLE_START + index, p1, POINTER_TABLE_START + 223 + index, p2, POINTER_TABLE_START + 446 + index, p3);
+        if (first && simulation)
+            verbose_printf("Writing new entry in the pointer table[%02X] = %06X\n", index, snes_addr);
         if (!simulation)
         {
             rom_fseek(rom_stream, POINTER_TABLE_START + index);
@@ -457,6 +470,7 @@ void	create_pointer_table(unsigned int i_start, bool simulation)
     //if (!simulation)
     printf("GFX data end at %06X - leaving %d free space\n", pc_addr + insertion_size[222], NORMAL_MAX_END - pc_addr - insertion_size[222]);
     fclose(rom_stream);
+    first = false;
 }
 
 int 	main(int ac, char *ag[])
@@ -464,7 +478,7 @@ int 	main(int ac, char *ag[])
     bool extract, inject, list, simulation, verbose, zmode = false;
     const char *mode;
 
-    if (ac < 2 && ac > 5)
+    if (ac < 3 || ac > 5)
     {
         show_help();
         return 1;
@@ -495,16 +509,16 @@ int 	main(int ac, char *ag[])
     }
     if (access(ag[2], R_OK) != 0)
     {
-        fprintf(stderr, "Error opening/accessing %s : %s\n", ag[2], strerror(errno));
+        fprintf(stderr, "Error opening/accessing rom file %s : %s\n", ag[2], strerror(errno));
         return 1;
     }
     verbose_print = verbose;
     if (zmode)
-	  printf("zcompress mode enabled\n");
+        printf("zcompress mode enabled\n");
     rom_file = ag[2];
     set_header_offset();
-	build_gfx_table_pointers();
-	// == LIST ==
+    build_gfx_table_pointers();
+    // == LIST ==
     if (list)
     {
         if (ac != 3)
@@ -512,75 +526,76 @@ int 	main(int ac, char *ag[])
             fprintf(stderr, "list mode only take the rom file as argument\n");
             return 1;
         }
-		list_table_compressed();
-		return 0;
+        list_table_compressed();
+        return 0;
     }
     // == EXTRACT ==
     if (extract)
-	{
-	  if (ac > 4 && ac <= 2)
-	  {
-		fprintf(stderr, "Invalid number of arguments for extraction\n");
-		return 1;
-	  }
-	  if (ac == 4 && access(ag[3], X_OK) == 0 && access(ag[3], W_OK) != 0)
-	  {
-		fprintf(stderr, "Can't access %s : %s\n", ag[3], strerror(errno));
-		return 1;
-	  }
-	  verbose_printf("Extracting GFX from %s\n", rom_file);
-	  build_gfx_location();
-	  s_location* locs = gfx_locations;
-	  if (zmode)
-	  {
-		build_zcompress_gfx_location();
-		locs = zcompress_gfx_locations;
-	  }
-	  if (ac == 4)
-	  {
-		extract_gfx(locs, true, ag[3]);
-		return 0;
-	  }
-	  extract_gfx(locs, false, NULL);
-	}
-	// == INJECT ==
-	if (inject)
-	{
-	  if (ac > 6 && ac < 5)
-	  {
-		fprintf(stderr, "Invalid number of arguments for injection\n");
-		return 1;
-	  }
-	  unsigned int start = NORMAL_START;
-	  char *to_inject;
-	  build_gfx_location();
-	  s_location* locs = gfx_locations;
-	  if (zmode)
-	  {
-		build_zcompress_gfx_location();
-		locs = zcompress_gfx_locations;
-	  }
-	  if (ac == 5)
-	    to_inject = ag[4];
-	  if (ac == 6)
-	  {
-		to_inject = ag[5];
-		if (sscanf(ag[4], "%X", &start) == 0)
-		{
-		  fprintf(stderr, "The starting possition for injection is not a valid hexadecimal number\n");
-		  return 1;
-		}
-	  }
-	  if (access(to_inject, R_OK) != 0)
-	  {
-		fprintf(stderr, "Can't access %s : %s\n", to_inject, strerror(errno));
-		return 1;
-	  }
-	  inject_gfx(locs, ag[3], start, simulation);
-      create_pointer_table(start, true);
-	  if (!simulation)
-		  create_pointer_table(start, false);
-	}
+    {
+        if (ac > 4 && ac <= 2)
+        {
+            fprintf(stderr, "Invalid number of arguments for extraction\n");
+            return 1;
+        }
+        if (ac == 4 && access(ag[3], X_OK) == 0 && access(ag[3], W_OK) != 0)
+        {
+            fprintf(stderr, "Can't access %s : %s\n", ag[3], strerror(errno));
+            return 1;
+        }
+        verbose_printf("Extracting GFX from %s\n", rom_file);
+        build_gfx_location();
+        s_location* locs = gfx_locations;
+        if (zmode)
+        {
+            build_zcompress_gfx_location();
+            locs = zcompress_gfx_locations;
+        }
+        if (ac == 4)
+        {
+            extract_gfx(locs, true, ag[3]);
+            return 0;
+        }
+        extract_gfx(locs, false, NULL);
+    }
+    // == INJECT ==
+    if (inject)
+    {
+        if (ac > 5 && ac < 4)
+        {
+            fprintf(stderr, "Invalid number of arguments for injection\n");
+            return 1;
+        }
+        unsigned int start = NORMAL_START;
+        char *to_inject = NULL;
+        build_gfx_location();
+        s_location* locs = gfx_locations;
+        if (zmode)
+        {
+            build_zcompress_gfx_location();
+            locs = zcompress_gfx_locations;
+        }
+        if (ac == 4)
+            to_inject = ag[3];
+        if (ac == 5)
+        {
+            to_inject = ag[4];
+            if (sscanf(ag[3], "%X", &start) == 0)
+            {
+                fprintf(stderr, "The starting possition for injection is not a valid hexadecimal number\n");
+                return 1;
+            }
+        }
+        if (access(to_inject, R_OK) != 0)
+        {
+            fprintf(stderr, "Can't access %s : %s\n", to_inject, strerror(errno));
+            return 1;
+        }
+        verbose_printf("Injection GFX from %s to %s at %06X\n", to_inject, rom_file, start);
+        inject_gfx(locs, ag[3], start, simulation);
+        create_pointer_table(start, zmode, true);
+        if (!simulation)
+            create_pointer_table(start, zmode, false);
+    }
     return 0;
 }
 

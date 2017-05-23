@@ -94,61 +94,61 @@ char*   convert_4bpp_to_3bpp(const char* to_convert, size_t lenght, unsigned int
 
 unsigned int    compare_data(const char* data1, const char* data2, const unsigned int lenght)
 {
-  for (unsigned int i = 0; i < lenght; i++)
-  {
-    if (data1[i] == data2[i])
-      printf("\033[1;32m%02X\033[0m,", (unsigned char) data1[i]);
-    else
+    for (unsigned int i = 0; i < lenght; i++)
     {
-      printf("\nData differ at : %d\n", i);
-      printf("Data1 : ");
-      for (unsigned j = 0; j < 10 && i + j < lenght; j++)
-        printf("\033[1;31m%02X\033[0m,", (unsigned char) data1[i]);
-      printf("\nData2 : ");
-      for (unsigned j = 0; j < 10 && i + j < lenght; j++)
-        printf("\033[1;31m%02X\033[0m,", (unsigned char) data2[i]);
-      printf("\n");
-      return i;
+        if (data1[i] == data2[i])
+            printf("\033[1;32m%02X\033[0m,", (unsigned char) data1[i]);
+        else
+        {
+            printf("\nData differ at : %d\n", i);
+            printf("Data1 : ");
+            for (unsigned j = 0; j < 10 && i + j < lenght; j++)
+                printf("\033[1;31m%02X\033[0m,", (unsigned char) data1[i]);
+            printf("\nData2 : ");
+            for (unsigned j = 0; j < 10 && i + j < lenght; j++)
+                printf("\033[1;31m%02X\033[0m,", (unsigned char) data2[i]);
+            printf("\n");
+            return i;
+        }
     }
-  }
-  printf("\n");
-  return -1;
+    printf("\n");
+    return -1;
 }
 
 void    copy_locations(s_location* dest, s_location *src)
 {
-  for (unsigned int i = 0; i < NB_POINTER_IN_TABLE; i++)
-    dest[i] = src[i];
+    for (unsigned int i = 0; i < NB_POINTER_IN_TABLE; i++)
+        dest[i] = src[i];
 }
 
 /* just a dumb bubble sort */
 void    sort_locations(s_location* tosort, s_location *output)
 {
-  copy_locations(output, tosort);
-  bool  sorted = false;
-  
-  while (!sorted)
-  {
-    sorted = true;
-    for (unsigned int i = 0; i < NB_POINTER_IN_TABLE - 1; i++)
-    {
-      if (output[i].address > output[i + 1].address)
-      {
-        s_location tmp;
-        tmp = output[i];
+    copy_locations(output, tosort);
+    bool  sorted = false;
 
-        output[i] = output[i + 1];
-        output[i + 1] = tmp;
-        sorted = false;
-      }
+    while (!sorted)
+    {
+        sorted = true;
+        for (unsigned int i = 0; i < NB_POINTER_IN_TABLE - 1; i++)
+        {
+            if (output[i].address > output[i + 1].address)
+            {
+                s_location tmp;
+                tmp = output[i];
+
+                output[i] = output[i + 1];
+                output[i + 1] = tmp;
+                sorted = false;
+            }
+        }
     }
-  }
 }
 
 void   verbose_printf(const char* fmt, ...)
 {
     if (!verbose_print)
-      return;
+        return;
     va_list args;
     va_start(args, fmt);
     vprintf(fmt, args);
@@ -163,5 +163,22 @@ void    print_location(s_location loc)
 
 void    show_help()
 {
-  exit(1);
+    printf("SCompress is a tool to extract and insert gfx data from Zelda 3 roms. Auto detect header.\n\n");
+    printf("Summary : scompress <modes> romfile [extra arguments]\n\n");
+    printf("\tThe <modes> arguments take combinaison of letters that specify the main mode and some options.\n");
+    printf("\tThere are 3 main modes :\n");
+    printf("\t\tl\tlist\tmake scompress list the addresses in the pointer table of the rom.\n");
+    printf("\t\te\textract\tExtract the gfx of the rom. if an argument is specified, everything is extracted in one file.\n");
+    printf("\t\t\tinject\tthe mode to inject the gfx in the rom. take an optionnal starting location (hexa) and the gfx file to inject as arguments\n");
+    printf("\n\tYou can add 2 other 'mode':\n");
+    printf("\t\tz\tzcompress\tmake scompress emulate zcompress behavior.\n");
+    printf("\t\ts\tsimulation\tassociated with injection, calcuation are done but nothing will be written to the rom.\n");
+    printf("\t\tv\tverbose\tmake scompress display more information.\n");
+    printf("\n\nExamples:\n");
+    printf("\tscompress e Zelda3.smc\t\t\tExtract the 200+ gfx into separate files\n");
+    printf("\tscompress e Zelda3.smc allgfx.bin\tExtract the 200+ gfx into the allgfx.bin file\n");
+    printf("\tscompress i Zelda3.smc allgfx.bin\tinject the gfx at the default location\n");
+    printf("\tscompress i Zelda3.smc 87000 allgfx.bin\tinject the gfx starting at $87000 in the rom file.\n");
+    printf("\tscompress izv Zelda3.smc allgfx.bin\tinject the gfx in the rom file following zcompress gfx file disposition while displaying more information.\n");
+    exit(1);
 }
