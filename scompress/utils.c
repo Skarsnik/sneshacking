@@ -1,10 +1,48 @@
+/*
+Copyright 2017 Sylvain "Skarsnik" Colinet
+
+ This file is part of the sneshackingtools project.
+
+    sneshackingtools is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Foobar is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with sneshackingtools.  If not, see <http://www.gnu.org/licenses/>
+    */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <stdarg.h>
+#include <sys/stat.h>
 #include "tile.h"
 #include "scompress.h"
+
+
+void set_header_offset()
+{
+    struct stat st;
+    stat(rom_file, &st);
+    if (st.st_size & 0x200)
+    {
+        header_offset = 0x200;
+        verbose_printf("Rom has header\n");
+    }
+    else
+    {
+        header_offset = 0;
+        verbose_printf("Rom has no header\n");
+    }
+}
 
 FILE* my_fopen(const char *file, const char *mode)
 {
@@ -107,8 +145,23 @@ void    sort_locations(s_location* tosort, s_location *output)
   }
 }
 
+void   verbose_printf(const char* fmt, ...)
+{
+    if (!verbose_print)
+      return;
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+}
+
 void    print_location(s_location loc)
 {
     printf("0x%06X - %d bpp,  %s  - max lenght: %d\n", loc.address, loc.bpp,
            loc.compression ? "Compressed" : "Uncompressed", loc.max_lenght);
+}
+
+
+void    show_help()
+{
+  exit(1);
 }

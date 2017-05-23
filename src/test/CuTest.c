@@ -215,6 +215,7 @@ char*	hexString(const char* str, const unsigned int size)
     return toret;
 }
 
+
 void CuAssertDataEquals_LineMsg(CuTest* tc, const char* file, int line, const char* message, 
 	const char* expected, const unsigned int size, const char* actual)
 {
