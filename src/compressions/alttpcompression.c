@@ -58,6 +58,18 @@ static char*   my_asprintf(const char* fmt, ...)
     return buffer;
 }
 
+char*	alttp_decompress_gfx(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
+{
+    return alttp_decompress(c_data, start, max_lenght, uncompressed_data_size, compressed_lenght, D_MODE_GFX);
+}
+
+
+char*	alttp_decompress_overworld(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
+{
+    return alttp_decompress(c_data, start, max_lenght, uncompressed_data_size, compressed_lenght, D_MODE_OW_DATA);
+}
+
+
 /*
  * The compression format follow a simple pattern:
  * first byte represente a header. The header represent a command and a lenght
@@ -66,7 +78,7 @@ static char*   my_asprintf(const char* fmt, ...)
  */
 
 
-char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
+char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght, char mode)
 {
     char*		u_data;
     unsigned char	header;
@@ -161,7 +173,11 @@ char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned in
         }
         case D_CMD_COPY_EXISTING: { // Next 2 bytes form an offset to pick data from the output
             //printf("%02X,%02X\n", (unsigned char) c_data[c_data_pos + 1], (unsigned char) c_data[c_data_pos + 2]);
-            unsigned short offset = (unsigned char)(c_data[c_data_pos + 1]) | ((unsigned char) (c_data[c_data_pos + 2]) << 8);
+            unsigned short offset;
+            if (mode == D_MODE_GFX)
+                offset = (unsigned char)(c_data[c_data_pos + 1]) | ((unsigned char) (c_data[c_data_pos + 2]) << 8);
+            if (mode == D_MODE_OW_DATA)
+                offset = (unsigned char)(c_data[c_data_pos + 2]) | ((unsigned char) (c_data[c_data_pos + 1]) << 8);
             if (offset > u_data_pos)
             {
                 alttp_decompression_error = my_asprintf("Offset for command copy existing is larger than the current position (Offset : 0x%04X | Pos : 0x%06X\n", offset, u_data_pos);
@@ -315,7 +331,7 @@ compression_piece*	merge_copy(compression_piece* start)
     return start;
 }
 
-unsigned int	create_compression_string(compression_piece* start, char *output)
+unsigned int	create_compression_string(compression_piece* start, char *output, char mode)
 {
     unsigned int pos = 0;
     compression_piece*	piece = start;
@@ -355,8 +371,16 @@ unsigned int	create_compression_string(compression_piece* start, char *output)
                     piece->argument_lenght = D_MAX_LENGHT;
                     unsigned int offset = piece->argument[0] + (piece->argument[1] << 8);
                     new_piece = new_compression_piece(piece->command, lenght_left, piece->argument, piece->argument_lenght);
-                    new_piece->argument[0] = (offset + D_MAX_LENGHT) & 0xFF;
-                    new_piece->argument[1] = (offset + D_MAX_LENGHT) >> 8;
+                    if (mode == D_MODE_GFX)
+                    {
+                        new_piece->argument[0] = (offset + D_MAX_LENGHT) & 0xFF;
+                        new_piece->argument[1] = (offset + D_MAX_LENGHT) >> 8;
+                    }
+                    if (mode == D_MODE_OW_DATA)
+                    {
+                        new_piece->argument[1] = (offset + D_MAX_LENGHT) & 0xFF;
+                        new_piece->argument[0] = (offset + D_MAX_LENGHT) >> 8;
+                    }
                 }
                 s_debug("New added piece\n");
                 print_compression_piece(new_piece);
@@ -373,10 +397,21 @@ unsigned int	create_compression_string(compression_piece* start, char *output)
     return pos + 1;
 }
 
+char*	alttp_compress_gfx(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size)
+{
+    return alttp_compress(u_data, start, lenght, compressed_size, D_MODE_GFX);
+}
+
+char*	alttp_compress_overworld(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size)
+{
+    return alttp_compress(u_data, start, lenght, compressed_size, D_MODE_OW_DATA);
+}
+
+
 
 // TODO TEST compressed data border for each cmd
 
-char*	alttp_compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size)
+char*	alttp_compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size, char mode)
 {
 #ifdef MY_DEBUG
     char *debug_str = hexString(u_data + start, lenght);
@@ -548,10 +583,10 @@ char*	alttp_compress(const char* u_data, const size_t start, const unsigned int 
         {
             // We don't call merge copy so we need more space
             char *tmp = (char*) malloc(lenght * 2);
-            *compressed_size = create_compression_string(compressed_chain_start->next, tmp);
+            *compressed_size = create_compression_string(compressed_chain_start->next, tmp, mode);
             unsigned int p;
             unsigned int k;
-            char *uncomp = alttp_decompress(tmp, 0, 0, &p, &k);
+            char *uncomp = alttp_decompress(tmp, 0, 0, &p, &k, mode);
 #ifdef MY_DEBUG
             debug_str = speHexString(uncomp, p);
 
@@ -578,7 +613,7 @@ char*	alttp_compress(const char* u_data, const size_t start, const unsigned int 
         compressed_chain = compressed_chain->next;
     }
 #endif
-    *compressed_size = create_compression_string(compressed_chain_start->next, compressed_data);
+    *compressed_size = create_compression_string(compressed_chain_start->next, compressed_data, mode);
     free_compression_chain(compressed_chain_start);
     return compressed_data;
 }

@@ -24,6 +24,8 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 extern "C" {
 #endif
 
+#define D_MODE_GFX 0
+#define D_MODE_OW_DATA 1
 #include <stdbool.h>
 /* Enable this to force the compression to check if compressed data still match the uncompressed data
  **/  
@@ -47,7 +49,11 @@ extern char* alttp_compression_error;
  */
 
 
-char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght);
+char*	alttp_decompress_gfx(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght);
+char*	alttp_decompress_overworld(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght);
+
+char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght, char mode);
+
 
 
 /*
@@ -58,8 +64,10 @@ char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned in
  * lenght is the lenght of u_data to compress
  * compressed_size is the resulting size of the compressed string.
  */
-char*	alttp_compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size);
+char*	alttp_compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size, char mode);
 
+char*	alttp_compress_gfx(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size);
+char*	alttp_compress_overworld(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size);
 
 #ifdef __cplusplus
 }
