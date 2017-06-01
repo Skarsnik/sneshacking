@@ -23,7 +23,15 @@ Copyright 2017 Sylvain "Skarsnik" Colinet
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <unistd.h>
+#ifdef OS_UNIX
+    #include <unistd.h>
+#else
+	#define access(a, b) _access(a, b)
+    #define X_OK 00
+    #define W_OK 02
+	#define R_OK 04
+#endif
+
 #include <sys/stat.h>
 
 #include "tile.h"
@@ -473,9 +481,19 @@ void	create_pointer_table(unsigned int i_start, bool zmode, bool simulation)
     first = false;
 }
 
+struct mode_c {
+	bool* mode;
+	char c;
+};
+
 int 	main(int ac, char *ag[])
 {
-    bool extract, inject, list, simulation, verbose, zmode = false;
+    bool extract, inject, list, simulation, verbose, zmode;
+    extract = false;
+    inject = false;
+    simulation = false;
+    verbose = false;
+    zmode = false;
     const char *mode;
 
     if (ac < 3 || ac > 5)
@@ -485,10 +503,7 @@ int 	main(int ac, char *ag[])
     }
     mode = ag[1];
     unsigned int nb_char_mode = 0;
-    struct {
-        bool* mode;
-        char c;
-    } tab_mode[6] = {{&extract, 'e'}, {&inject, 'i'}, {&list, 'l'}, {&simulation, 's'}, {&verbose, 'v'}, {&zmode, 'z'}};
+    struct mode_c tab_mode[6] = {{&extract, 'e'}, {&inject, 'i'}, {&list, 'l'}, {&simulation, 's'}, {&verbose, 'v'}, {&zmode, 'z'}};
     for (unsigned int i = 0; i < 6; i++)
     {
         if (strchr(mode, tab_mode[i].c) != NULL)
@@ -504,7 +519,7 @@ int 	main(int ac, char *ag[])
     }
     if ((inject && extract) || (inject && list) || (extract && list))
     {
-        fprintf(stderr, "You must select etheir extract, inject of list mode\n");
+        fprintf(stderr, "You must select etheir extract, inject or list mode\n");
         return 1;
     }
     if (access(ag[2], R_OK) != 0)
