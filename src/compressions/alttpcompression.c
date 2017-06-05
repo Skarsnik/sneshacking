@@ -48,7 +48,7 @@ char*	alttp_decompress_gfx(const char *c_data, const size_t start, unsigned int 
 
 char*	alttp_decompress_overworld(const char *c_data, const size_t start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
 {
-    char* toret = std_nintendo_compress(c_data, start, max_lenght, uncompressed_data_size, compressed_lenght, D_NINTENDO_C_MODE1);
+    char* toret = std_nintendo_decompress(c_data, start, max_lenght, uncompressed_data_size, compressed_lenght, D_NINTENDO_C_MODE1);
     alttp_decompression_error = std_nintendo_decompression_error;
     return toret;
 }
