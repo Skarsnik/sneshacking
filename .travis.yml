@@ -5,7 +5,7 @@ compiler:
 
 script: 
 - cd src/test && cmake . && make
-- ./testalttpcompression
+- ./testnintendocompression
 - ./testtile
 - ./testpalette
 
