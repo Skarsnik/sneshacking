@@ -17,25 +17,25 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
     along with sneshackingtools.  If not, see <http://www.gnu.org/licenses/>
     */
 
-#ifndef H_DECOMPRESS_H
-#define H_DECOMPRESS_H
+#ifndef H_NINTENDO_COMPRESS_H
+#define H_NINTENDO_COMPRESS_H
+
+
+#define D_NINTENDO_C_MODE1 0
+#define D_NINTENDO_C_MODE2 1
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define D_MODE_GFX 0
-#define D_MODE_OW_DATA 1
-#include <stdbool.h>
-/* Enable this to force the compression to check if compressed data still match the uncompressed data
- **/  
-
-extern bool  alttp_compression_sanity_check;
+extern bool  std_nintendo_compression_sanity_check;
 
 /* These hold the error string returned by the 2 functions */
 
-extern char* alttp_decompression_error;
-extern char* alttp_compression_error;
+extern char* std_nintendo_decompression_error;
+extern char* std_nintendo_compression_error;
 
 /*
  * This function decompress the c_data string starting at start and return the decompressed data.
@@ -46,28 +46,22 @@ extern char* alttp_compression_error;
  *
  * uncompressed_data_size is the resulting size of the decompressed string.
  * compressed_lenght is the lenght of the compressed data, meaning the number of bytes read in c_data.
+ * mode is the variation of the compression, use one of the define for it: D_NINTENDO_C_MODEX... 1 is is SMW, 2 is zelda3 gfx
  */
 
-
-char*	alttp_decompress_gfx(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght);
-char*	alttp_decompress_overworld(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght);
-
-char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght, char mode);
-
-
+char*	std_nintendo_decompress(const char *c_data, const size_t start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght, char mode);
 
 /*
- * This function compress u_data following the compression format used by Zelda3: a link to the past
+ * This function compress u_data following the compression format used by Nintendo
  * and return the resulting string or NULL if an error occured.
  *
  * start is the starting offset in u_data to compress.
  * lenght is the lenght of u_data to compress
  * compressed_size is the resulting size of the compressed string.
+ * mode is the variation of the compression.
  */
-char*	alttp_compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size, char mode);
 
-char*	alttp_compress_gfx(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size);
-char*	alttp_compress_overworld(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size);
+char*	std_nintendo_compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size, char mode);
 
 #ifdef __cplusplus
 }

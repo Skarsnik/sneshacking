@@ -23,7 +23,7 @@ Copyright 2017 Sylvain "Skarsnik" Colinet
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
-#ifdef OS_UNIX
+#ifdef __unix__
     #include <unistd.h>
 #else
 	#define access(a, b) _access(a, b)
@@ -232,7 +232,7 @@ void	extract_gfx(s_location* locations, bool single_file, const char* allfilenam
         if (location.compression)
         {
             //printf("Compressed\n");
-            uncompressed = alttp_decompress(read_buffer, 0, read_lenght, &decompressed_lenght, &compressed_lenght);
+            uncompressed = alttp_decompress_gfx(read_buffer, 0, read_lenght, &decompressed_lenght, &compressed_lenght);
             //printf("Compressed lenght : %d  - Decompressed lenght : %d\n", compressed_lenght, decompressed_lenght);
             if (read_lenght < compressed_lenght)
                 fprintf(stderr, "WARNING: compressed lenght read exceed the expected read lenght for : %02X\n", i);
@@ -330,7 +330,7 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
 
     FILE* gfx_file = my_fopen(inject_file, "r");
     FILE* rom_stream = my_fopen(rom_file, "r+");
-    alttp_compression_sanity_check = true;
+    std_nintendo_compression_sanity_check = true;
 
     if (locations == zcompress_gfx_locations)
     {
@@ -370,11 +370,11 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
             {
                 converted = convert_4bpp_to_3bpp(read_buffer, 2048, &converted_size);
                 //printf("Converted size : %d\n", converted_size);
-                compressed = alttp_compress(converted, 0, converted_size, &compressed_lenght);
+                compressed = alttp_compress_gfx(converted, 0, converted_size, &compressed_lenght);
             }
             if (location.bpp == 2)
             {
-                compressed = alttp_compress(read_buffer, 0, 2048, &compressed_lenght);
+                compressed = alttp_compress_gfx(read_buffer, 0, 2048, &compressed_lenght);
             }
             if (compressed == NULL)
             {
@@ -389,13 +389,13 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
                 rom_fseek(rom_stream, location.address);
                 fread(read_buffer, 1, 2048, rom_stream);
                 unsigned int a, b, a2, b2;
-                char *piko = alttp_decompress(read_buffer, 0, 2048, &a, &b);
+                char *piko = alttp_decompress_gfx(read_buffer, 0, 2048, &a, &b);
                 if (location.bpp == 3 && memcmp(converted, piko, a) != 0)
                 {
                     fprintf(stderr, "Data from rom vs converted gfx not the same\n");
                     exit(1);
                 }
-                char* piko2 = alttp_decompress(compressed, 0, 2048, &a2, &b2);
+                char* piko2 = alttp_decompress_gfx(compressed, 0, 2048, &a2, &b2);
                 if (piko == NULL || piko2 == NULL)
                 {
                     fprintf(stderr, "Error decompressing something : %s\n", alttp_decompression_error);
