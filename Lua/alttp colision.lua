@@ -77,7 +77,7 @@ function DrawNiceText(text_x, text_y, str, color)
   else
     local calc_x = client.transformPointX(text_x)
     local calc_y = client.transformPointY(text_y)
-    gui.text(calc_x, calc_y, str, 0xFF000000, color)
+    gui.text(calc_x, calc_y, str, color)
   end
 end
 
