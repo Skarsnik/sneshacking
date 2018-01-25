@@ -126,6 +126,16 @@ void	testHiROMtoPCErrors(CuTest* tc)
                           ROMMAPPING_LOCATION_WRAM, rommapping_snes_to_pc(0x7E8000, HiROM, false));
 }
 
+void    testPCToHiROM(CuTest* tc)
+{
+  for (int i = 0; i < 4; i++)
+    {
+      char *tmp = NULL;
+      asprintf(&tmp, "Pc to HiROM: Simple test %X -> %02X:%04X", tab_hirom[i].pc_addr, tab_hirom[i].snes_addr >> 16, tab_hirom[i].snes_addr & 0x00FFFF);
+      CuAssertIntEquals_Msg(tc, tmp, tab_hirom[i].snes_addr, rommapping_pc_to_snes(tab_hirom[i].pc_addr, HiROM, false));
+    }
+}
+
 CuSuite* StrUtilGetSuite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, testLoROMToPC);

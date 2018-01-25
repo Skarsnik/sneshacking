@@ -57,5 +57,10 @@ int	hirom_snes_to_pc(const unsigned int snes_addr, char **info)
 
 int	hirom_pc_to_snes(const unsigned int pc_addr)
 {
-  return 0;
+  unsigned int bank = pc_addr / 0x8000;
+  //unsigned int offset = pc_addr  & 0x00FFFF;
+
+  if (bank <= 0x3D)
+      return pc_addr + 0x400000;
+  return pc_addr + + 0xFE0000;
 }
