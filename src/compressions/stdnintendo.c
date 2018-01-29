@@ -40,8 +40,8 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 #define D_CMD_BYTE_INC 3
 #define D_CMD_COPY_EXISTING 4
 
-#define D_MAX_NORMAL_LENGHT 32
-#define D_MAX_LENGHT 1024
+#define D_MAX_NORMAL_length 32
+#define D_max_length 1024
 
 char* std_nintendo_decompression_error = NULL;
 char* std_nintendo_compression_error = NULL;
@@ -52,7 +52,7 @@ static char*   my_asprintf(const char* fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    size_t needed = vsnprintf(NULL, 0, fmt, args);
+    unsigned int needed = vsnprintf(NULL, 0, fmt, args);
     char  *buffer = malloc(needed + 1);
     vsnprintf(buffer, needed + 1, fmt, args);
     return buffer;
@@ -61,13 +61,13 @@ static char*   my_asprintf(const char* fmt, ...)
 
 /*
  * The compression format follow a simple pattern:
- * first byte represente a header. The header represent a command and a lenght
+ * first byte represente a header. The header represent a command and a length
  * The bytes after the header have meaning depending on the command
  * Then you have a new header byte and so on, until you hit a header with the value FF
  */
 
 
-char*	std_nintendo_decompress(const char *c_data, const size_t start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght, char mode)
+char*	std_nintendo_decompress(const char *c_data, const unsigned int start, unsigned int max_length, unsigned int* uncompressed_data_size, unsigned int* compressed_length, char mode)
 {
     char*		u_data;
     unsigned char	header;
@@ -77,8 +77,8 @@ char*	std_nintendo_decompress(const char *c_data, const size_t start, unsigned i
     unsigned int	max_offset;
 
     max_offset = 0;
-    if (max_lenght != 0)
-        max_offset = start + max_lenght;
+    if (max_length != 0)
+        max_offset = start + max_length;
     header = c_data[start];
     u_data = (char *) malloc(INITIAL_ALLOC_SIZE); // No way to know the final size, we will probably realloc if needed
     allocated_memory = INITIAL_ALLOC_SIZE;
@@ -86,34 +86,34 @@ char*	std_nintendo_decompress(const char *c_data, const size_t start, unsigned i
     c_data_pos = start;
     while (header != 0xFF)
     {
-        unsigned int lenght;
+        unsigned int length;
         char command;
 
         command = header >> 5; // 3 hightest bits are the command
-        lenght = (header & 0x1F); // The rest is the lenght
+        length = (header & 0x1F); // The rest is the length
 
-        // Extended header, to allow for bigger lenght value than 32
+        // Extended header, to allow for bigger length value than 32
         if (command == 7)
         {
             // The command are the next 3 bits
             command = (header >> 2 ) & 7;
-            // 2 bits in the original header are the hight bit for the new lenght
-            // the next byte is added to this lenght
+            // 2 bits in the original header are the hight bit for the new length
+            // the next byte is added to this length
 
-            lenght = ((int)((header & 3) << 8)) + (unsigned char) c_data[c_data_pos + 1];
+            length = ((int)((header & 3) << 8)) + (unsigned char) c_data[c_data_pos + 1];
             c_data_pos++;
         }
 
-        //lenght value starts at 0, 0 is 1
-        lenght++;
-        //printf("%d[%d]", command, lenght);
-        s_debug("header %02X - Command : %d , lenght : %d\n", header, command, lenght);
+        //length value starts at 0, 0 is 1
+        length++;
+        //printf("%d[%d]", command, length);
+        s_debug("header %02X - Command : %d , length : %d\n", header, command, length);
         if (c_data_pos >= max_offset && max_offset != 0)
         {
-            std_nintendo_decompression_error = "Compression string exceed the max_lenght specified";
+            std_nintendo_decompression_error = "Compression string exceed the max_length specified";
             goto error;
         }
-        if (u_data_pos + lenght + 1 > allocated_memory) // Adjust allocated memory
+        if (u_data_pos + length + 1 > allocated_memory) // Adjust allocated memory
         {
             s_debug("Memory get reallocated by %d was %d\n", INITIAL_ALLOC_SIZE, allocated_memory);
             u_data = (char*) realloc(u_data, allocated_memory + INITIAL_ALLOC_SIZE);
@@ -127,34 +127,34 @@ char*	std_nintendo_decompress(const char *c_data, const size_t start, unsigned i
         switch (command)
         {
         case D_CMD_COPY: { // No compression, data are copied as
-            if (max_offset != 0 && c_data_pos + 1 + lenght > max_offset)
+            if (max_offset != 0 && c_data_pos + 1 + length > max_offset)
             {
-                std_nintendo_decompression_error = my_asprintf("A copy command exceed the available data %d > %d (max_lenght specified)\n", c_data_pos + 1 + lenght, max_offset);
+                std_nintendo_decompression_error = my_asprintf("A copy command exceed the available data %d > %d (max_length specified)\n", c_data_pos + 1 + length, max_offset);
                 goto error;
             }
-            memcpy(u_data + u_data_pos, c_data + c_data_pos + 1, lenght);
-            c_data_pos += lenght + 1;
+            memcpy(u_data + u_data_pos, c_data + c_data_pos + 1, length);
+            c_data_pos += length + 1;
             break;
         }
-        case D_CMD_BYTE_REPEAT: { // Copy the same byte lenght time
-            memset(u_data + u_data_pos, c_data[c_data_pos + 1], lenght);
+        case D_CMD_BYTE_REPEAT: { // Copy the same byte length time
+            memset(u_data + u_data_pos, c_data[c_data_pos + 1], length);
             c_data_pos += 2;
             break;
         }
-        case D_CMD_WORD_REPEAT: { // Next byte is A, the one after is B, copy the sequence AB lenght times
+        case D_CMD_WORD_REPEAT: { // Next byte is A, the one after is B, copy the sequence AB length times
             char a = c_data[c_data_pos + 1];
             char b = c_data[c_data_pos + 2];
-            for (int i = 0; i < lenght; i = i + 2)
+            for (int i = 0; i < length; i = i + 2)
             {
                 u_data[u_data_pos + i] = a;
-                if ((i + 1) < lenght)
+                if ((i + 1) < length)
                     u_data[u_data_pos + i + 1] = b;
             }
             c_data_pos += 3;
             break;
         }
-        case D_CMD_BYTE_INC: { // Next byte is copied and incremented lenght time
-            for (int i = 0; i < lenght; i++) {
+        case D_CMD_BYTE_INC: { // Next byte is copied and incremented length time
+            for (int i = 0; i < length; i++) {
                 u_data[u_data_pos + i] = c_data[c_data_pos + 1] + i;
             }
             c_data_pos += 2;
@@ -172,7 +172,7 @@ char*	std_nintendo_decompress(const char *c_data, const size_t start, unsigned i
                 std_nintendo_decompression_error = my_asprintf("Offset for command copy existing is larger than the current position (Offset : 0x%04X | Pos : 0x%06X\n", offset, u_data_pos);
                 goto error;
             }
-            if (u_data_pos + lenght >= allocated_memory)
+            if (u_data_pos + length >= allocated_memory)
             {
                 s_debug("Memory get reallocated by a copy,  %d was %d\n", INITIAL_ALLOC_SIZE, allocated_memory);
                 u_data = (char*) realloc(u_data, allocated_memory + INITIAL_ALLOC_SIZE);
@@ -183,7 +183,7 @@ char*	std_nintendo_decompress(const char *c_data, const size_t start, unsigned i
                 }
                 allocated_memory += INITIAL_ALLOC_SIZE;
             }
-            memcpy(u_data + u_data_pos, u_data + offset, lenght);
+            memcpy(u_data + u_data_pos, u_data + offset, length);
             c_data_pos += 3;
             break;
         }
@@ -192,12 +192,12 @@ char*	std_nintendo_decompress(const char *c_data, const size_t start, unsigned i
             goto error;
         }
         }
-        u_data_pos += lenght;
+        u_data_pos += length;
         //printf("%d|%d\n", c_data_pos, u_data_pos);
         header = c_data[c_data_pos];
     }
     *uncompressed_data_size = u_data_pos;
-    *compressed_lenght = c_data_pos + 1;
+    *compressed_length = c_data_pos + 1;
     //printf("\n");
     return u_data;
     // yay goto usage :)
@@ -206,15 +206,15 @@ error:
     return NULL;
 }
 
-#define MY_BUILD_HEADER(command, lenght) (command << 5) + ((lenght) - 1)
+#define MY_BUILD_HEADER(command, length) (command << 5) + ((length) - 1)
 
 typedef struct s_compression_piece compression_piece;
 
 struct s_compression_piece {
     char 			command;
-    unsigned int 		lenght;
+    unsigned int 		length;
     char			*argument;
-    unsigned int		argument_lenght;
+    unsigned int		argument_length;
     compression_piece	*next;
 };
 
@@ -252,25 +252,25 @@ static char*	speHexString(const char* str, const unsigned int size)
 static void	print_compression_piece(compression_piece* piece)
 {
     s_debug("Command : %d\n", piece->command);
-    s_debug("Lenght  : %d\n", piece->lenght);
-    s_debug("Argument lenght : %d\n", piece->argument_lenght);
-    s_debug("Argument :%s\n", hexString(piece->argument, piece->argument_lenght));
+    s_debug("length  : %d\n", piece->length);
+    s_debug("Argument length : %d\n", piece->argument_length);
+    s_debug("Argument :%s\n", hexString(piece->argument, piece->argument_length));
 }
 
 
-compression_piece*	new_compression_piece(const char command, const unsigned int lenght, const char* args, const unsigned int argument_lenght)
+compression_piece*	new_compression_piece(const char command, const unsigned int length, const char* args, const unsigned int argument_length)
 {
     compression_piece* toret = (compression_piece*) malloc(sizeof(compression_piece));
     toret->command = command;
-    toret->lenght = lenght;
+    toret->length = length;
     if (args != NULL)
     {
-        toret->argument = (char*) malloc(argument_lenght);
-        memcpy(toret->argument, args, argument_lenght);
+        toret->argument = (char*) malloc(argument_length);
+        memcpy(toret->argument, args, argument_length);
     }
     else
         toret->argument = NULL;
-    toret->argument_lenght = argument_lenght;
+    toret->argument_length = argument_length;
     toret->next = NULL;
     return toret;
 }
@@ -300,13 +300,13 @@ compression_piece*	merge_copy(compression_piece* start)
     {
         if (piece->command == D_CMD_COPY && piece->next != NULL && piece->next->command == D_CMD_COPY)
         {
-            if (piece->lenght + piece->next->lenght <= D_MAX_LENGHT)
+            if (piece->length + piece->next->length <= D_max_length)
             {
-                unsigned int previous_lenght = piece->lenght;
-                piece->lenght = piece->lenght + piece->next->lenght;
-                piece->argument = realloc(piece->argument, piece->lenght);
-                piece->argument_lenght = piece->lenght;
-                memcpy(piece->argument + previous_lenght, piece->next->argument, piece->next->argument_lenght);
+                unsigned int previous_length = piece->length;
+                piece->length = piece->length + piece->next->length;
+                piece->argument = realloc(piece->argument, piece->length);
+                piece->argument_length = piece->length;
+                memcpy(piece->argument + previous_length, piece->next->argument, piece->next->argument_length);
                 s_debug("-Merged copy created\n");
                 print_compression_piece(piece);
                 compression_piece* p_next_next = piece->next->next;
@@ -327,48 +327,48 @@ unsigned int	create_compression_string(compression_piece* start, char *output, c
 
     while (piece != NULL)
     {
-        if (piece->lenght <= D_MAX_NORMAL_LENGHT) // Normal header
+        if (piece->length <= D_MAX_NORMAL_length) // Normal header
         {
-            output[pos++] = MY_BUILD_HEADER(piece->command, piece->lenght);
+            output[pos++] = MY_BUILD_HEADER(piece->command, piece->length);
         } else {
-            if (piece->lenght <= D_MAX_LENGHT)
+            if (piece->length <= D_max_length)
             {
-                output[pos++] = (7 << 5) | ((unsigned char) piece->command << 2) | (((piece->lenght - 1) & 0xFF00) >> 8);
-                s_debug("Building extended header : cmd: %d, lenght: %d -  %02X\n", piece->command, piece->lenght, (unsigned char) output[pos - 1]);
-                output[pos++] = (char) ((piece->lenght - 1) & 0x00FF);
+                output[pos++] = (7 << 5) | ((unsigned char) piece->command << 2) | (((piece->length - 1) & 0xFF00) >> 8);
+                s_debug("Building extended header : cmd: %d, length: %d -  %02X\n", piece->command, piece->length, (unsigned char) output[pos - 1]);
+                output[pos++] = (char) ((piece->length - 1) & 0x00FF);
             } else { //We need to split the command
-                unsigned int lenght_left = piece->lenght - D_MAX_LENGHT;
-                piece->lenght = D_MAX_LENGHT;
+                unsigned int length_left = piece->length - D_max_length;
+                piece->length = D_max_length;
                 compression_piece* new_piece = NULL;
                 if (piece->command == D_CMD_BYTE_REPEAT || piece->command == D_CMD_WORD_REPEAT)
                 {
-                    new_piece = new_compression_piece(piece->command, lenght_left, piece->argument, piece->argument_lenght);
+                    new_piece = new_compression_piece(piece->command, length_left, piece->argument, piece->argument_length);
                 }
                 if (piece->command == D_CMD_BYTE_INC)
                 {
-                    new_piece = new_compression_piece(piece->command, lenght_left, piece->argument, piece->argument_lenght);
-                    new_piece->argument[0] = (char) (piece->argument[0] + D_MAX_LENGHT);
+                    new_piece = new_compression_piece(piece->command, length_left, piece->argument, piece->argument_length);
+                    new_piece->argument[0] = (char) (piece->argument[0] + D_max_length);
                 }
                 if (piece->command == D_CMD_COPY)
                 {
-                    piece->argument_lenght = D_MAX_LENGHT;
-                    new_piece = new_compression_piece(piece->command, lenght_left, NULL, lenght_left);
-                    memcpy(new_piece->argument, piece->argument + D_MAX_LENGHT, lenght_left);
+                    piece->argument_length = D_max_length;
+                    new_piece = new_compression_piece(piece->command, length_left, NULL, length_left);
+                    memcpy(new_piece->argument, piece->argument + D_max_length, length_left);
                 }
                 if (piece->command == D_CMD_COPY_EXISTING)
                 {
-                    piece->argument_lenght = D_MAX_LENGHT;
+                    piece->argument_length = D_max_length;
                     unsigned int offset = piece->argument[0] + (piece->argument[1] << 8);
-                    new_piece = new_compression_piece(piece->command, lenght_left, piece->argument, piece->argument_lenght);
+                    new_piece = new_compression_piece(piece->command, length_left, piece->argument, piece->argument_length);
                     if (mode == D_NINTENDO_C_MODE2)
                     {
-                        new_piece->argument[0] = (offset + D_MAX_LENGHT) & 0xFF;
-                        new_piece->argument[1] = (offset + D_MAX_LENGHT) >> 8;
+                        new_piece->argument[0] = (offset + D_max_length) & 0xFF;
+                        new_piece->argument[1] = (offset + D_max_length) >> 8;
                     }
                     if (mode == D_NINTENDO_C_MODE1)
                     {
-                        new_piece->argument[1] = (offset + D_MAX_LENGHT) & 0xFF;
-                        new_piece->argument[0] = (offset + D_MAX_LENGHT) >> 8;
+                        new_piece->argument[1] = (offset + D_max_length) & 0xFF;
+                        new_piece->argument[0] = (offset + D_max_length) >> 8;
                     }
                 }
                 s_debug("New added piece\n");
@@ -378,8 +378,8 @@ unsigned int	create_compression_string(compression_piece* start, char *output, c
                 continue;
             }
         }
-        memcpy(output + pos, piece->argument, piece->argument_lenght);
-        pos += piece->argument_lenght;
+        memcpy(output + pos, piece->argument, piece->argument_length);
+        pos += piece->argument_length;
         piece = piece->next;
     }
     output[pos] = 0xFF;
@@ -389,20 +389,20 @@ unsigned int	create_compression_string(compression_piece* start, char *output, c
 
 // TODO TEST compressed data border for each cmd
 
-char*	std_nintendo_compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size, char mode)
+char*	std_nintendo_compress(const char* u_data, const unsigned int start, const unsigned int length, unsigned int* compressed_size, char mode)
 {
 #ifdef MY_DEBUG
-    char *debug_str = hexString(u_data + start, lenght);
+    char *debug_str = hexString(u_data + start, length);
     s_debug("==Compressing %s ==\n", debug_str);
     free(debug_str);
 #endif
     // we will realloc later
-    char* compressed_data = (char*) malloc(lenght + 3); // Worse cas is a copy of the string with extended header (probably should abord if more)
+    char* compressed_data = (char*) malloc(length + 3); // Worse cas is a copy of the string with extended header (probably should abord if more)
     compression_piece* compressed_chain = new_compression_piece(1, 1, "aaa", 2);
     compression_piece* compressed_chain_start = compressed_chain;
 
     unsigned int u_data_pos = start;
-    unsigned int last_pos = start + lenght - 1;
+    unsigned int last_pos = start + length - 1;
     s_debug("max pos :%d\n", last_pos);
     //unsigned int previous_start = start;
     unsigned int data_size_taken[5] = {0, 0, 0, 0, 0};
@@ -465,7 +465,7 @@ char*	std_nintendo_compress(const char* u_data, const size_t start, const unsign
             if (u_data_pos != start)
             {
                 unsigned int searching_pos = start;
-                //unsigned int compressed_lenght = u_data_pos - start;
+                //unsigned int compressed_length = u_data_pos - start;
                 unsigned int current_pos_u = u_data_pos;
                 unsigned int copied_size = 0;
                 unsigned int search_start = start;
@@ -560,7 +560,7 @@ char*	std_nintendo_compress(const char* u_data, const size_t start, const unsign
         if (std_nintendo_compression_sanity_check && compressed_chain_start->next != NULL)
         {
             // We don't call merge copy so we need more space
-            char *tmp = (char*) malloc(lenght * 2);
+            char *tmp = (char*) malloc(length * 2);
             *compressed_size = create_compression_string(compressed_chain_start->next, tmp, mode);
             unsigned int p;
             unsigned int k;

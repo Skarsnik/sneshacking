@@ -42,7 +42,7 @@ typedef struct {
     unsigned int    address;
     unsigned char   bpp;
     bool            compression;
-    unsigned int    max_lenght;
+    unsigned int    max_length;
     unsigned int    index;
 } s_location;
 
@@ -50,10 +50,10 @@ void set_header_offset();
 
 FILE* my_fopen(const char *file, const char *mode);
 int rom_fseek(FILE* stream, long offset);
-unsigned int    compare_data(const char* data1, const char* data2, const unsigned int lenght);
+unsigned int    compare_data(const char* data1, const char* data2, const unsigned int length);
 
-char*   convert_3bpp_to_4bpp(char *tiles, unsigned int lenght, unsigned int* converted_lenght);
-char*   convert_4bpp_to_3bpp(const char* to_convert, size_t lenght, unsigned int* converted_lenght);
+char*   convert_3bpp_to_4bpp(char *tiles, unsigned int length, unsigned int* converted_length);
+char*   convert_4bpp_to_3bpp(const char* to_convert, unsigned int length, unsigned int* converted_length);
 void    print_location(s_location loc);
 
 void    copy_locations(s_location* dest, s_location *src);

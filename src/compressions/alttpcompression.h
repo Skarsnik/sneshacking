@@ -41,18 +41,18 @@ extern char* alttp_compression_error;
  * This function decompress the c_data string starting at start and return the decompressed data.
  * returns NULL if an error occured.
  *
- * if max_lenght is set to 0 the function will stop when reaching the 'compression end' marker (header == 0xFF)
- * otherwise it will stop with an error if max_lenght is reached.
+ * if max_length is set to 0 the function will stop when reaching the 'compression end' marker (header == 0xFF)
+ * otherwise it will stop with an error if max_length is reached.
  *
  * uncompressed_data_size is the resulting size of the decompressed string.
- * compressed_lenght is the lenght of the compressed data, meaning the number of bytes read in c_data.
+ * compressed_length is the length of the compressed data, meaning the number of bytes read in c_data.
  */
 
 
-char*	alttp_decompress_gfx(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght);
-char*	alttp_decompress_overworld(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght);
+char*	alttp_decompress_gfx(const char *c_data, const unsigned int start, unsigned int max_length, unsigned int* uncompressed_data_size, unsigned int* compressed_length);
+char*	alttp_decompress_overworld(const char *c_data, const unsigned int start, unsigned int max_length, unsigned int* uncompressed_data_size, unsigned int* compressed_length);
 
-char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght, char mode);
+char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned int max_length, unsigned int* uncompressed_data_size, unsigned int* compressed_length, char mode);
 
 
 
@@ -61,13 +61,13 @@ char*	alttp_decompress(const char *c_data, const unsigned int start, unsigned in
  * and return the resulting string or NULL if an error occured.
  *
  * start is the starting offset in u_data to compress.
- * lenght is the lenght of u_data to compress
+ * length is the length of u_data to compress
  * compressed_size is the resulting size of the compressed string.
  */
-char*	alttp_compress(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size, char mode);
+char*	alttp_compress(const char* u_data, const unsigned int start, const unsigned int length, unsigned int* compressed_size, char mode);
 
-char*	alttp_compress_gfx(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size);
-char*	alttp_compress_overworld(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size);
+char*	alttp_compress_gfx(const char* u_data, const unsigned int start, const unsigned int length, unsigned int* compressed_size);
+char*	alttp_compress_overworld(const char* u_data, const unsigned int start, const unsigned int length, unsigned int* compressed_size);
 
 #ifdef __cplusplus
 }
