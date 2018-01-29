@@ -484,6 +484,7 @@ int 	main(int ac, char *ag[])
     bool extract, inject, list, simulation, verbose, zmode;
     extract = false;
     inject = false;
+    list = false;
     simulation = false;
     verbose = false;
     zmode = false;
