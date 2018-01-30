@@ -23,6 +23,7 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 #include <stdlib.h>
 #include <stdarg.h>
 #include "alttpcompression.h"
+#include "stdnintendo.h"
 
 char* alttp_decompression_error = NULL;
 char* alttp_compression_error = NULL;
@@ -32,34 +33,34 @@ static char*   my_asprintf(const char* fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    size_t needed = vsnprintf(NULL, 0, fmt, args);
+    unsigned int needed = vsnprintf(NULL, 0, fmt, args);
     char  *buffer = malloc(needed + 1);
     vsnprintf(buffer, needed + 1, fmt, args);
     return buffer;
 }
 
-char*	alttp_decompress_gfx(const char *c_data, const size_t start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
+char*	alttp_decompress_gfx(const char *c_data, const unsigned int start, unsigned int max_length, unsigned int* uncompressed_data_size, unsigned int* compressed_length)
 {
-    char *toret = std_nintendo_decompress(c_data, start, max_lenght, uncompressed_data_size, compressed_lenght, D_NINTENDO_C_MODE2);
+    char *toret = std_nintendo_decompress(c_data, start, max_length, uncompressed_data_size, compressed_length, D_NINTENDO_C_MODE2);
     alttp_decompression_error = std_nintendo_decompression_error;
     return toret;
 }
 
 
-char*	alttp_decompress_overworld(const char *c_data, const size_t start, unsigned int max_lenght, unsigned int* uncompressed_data_size, unsigned int* compressed_lenght)
+char*	alttp_decompress_overworld(const char *c_data, const unsigned int start, unsigned int max_length, unsigned int* uncompressed_data_size, unsigned int* compressed_length)
 {
-    char* toret = std_nintendo_decompress(c_data, start, max_lenght, uncompressed_data_size, compressed_lenght, D_NINTENDO_C_MODE1);
+    char* toret = std_nintendo_decompress(c_data, start, max_length, uncompressed_data_size, compressed_length, D_NINTENDO_C_MODE1);
     alttp_decompression_error = std_nintendo_decompression_error;
     return toret;
 }
 
 
-char*	alttp_compress_gfx(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size)
+char*	alttp_compress_gfx(const char* u_data, const unsigned int start, const unsigned int length, unsigned int* compressed_size)
 {
-    return std_nintendo_compress(u_data, start, lenght, compressed_size, D_NINTENDO_C_MODE2);
+    return std_nintendo_compress(u_data, start, length, compressed_size, D_NINTENDO_C_MODE2);
 }
 
-char*	alttp_compress_overworld(const char* u_data, const size_t start, const unsigned int lenght, unsigned int* compressed_size)
+char*	alttp_compress_overworld(const char* u_data, const unsigned int start, const unsigned int length, unsigned int* compressed_size)
 {
-    return std_nintendo_compress(u_data, start, lenght, compressed_size, D_NINTENDO_C_MODE1);
+    return std_nintendo_compress(u_data, start, length, compressed_size, D_NINTENDO_C_MODE1);
 }

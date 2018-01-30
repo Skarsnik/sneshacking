@@ -60,11 +60,11 @@ int rom_fseek(FILE* stream, long offset)
     return fseek(stream, offset + header_offset, SEEK_SET);
 }
 
-char*   convert_3bpp_to_4bpp(char *tiles, unsigned int lenght, unsigned int* converted_lenght)
+char*   convert_3bpp_to_4bpp(char *tiles, unsigned int length, unsigned int* converted_length)
 {
-    unsigned int nb_tile = lenght / 24;
-    *converted_lenght = nb_tile * 32;
-    char* converted = (char*) malloc(*converted_lenght);
+    unsigned int nb_tile = length / 24;
+    *converted_length = nb_tile * 32;
+    char* converted = (char*) malloc(*converted_length);
 
     for (unsigned int i = 0; i < nb_tile; i++)
     {
@@ -76,13 +76,13 @@ char*   convert_3bpp_to_4bpp(char *tiles, unsigned int lenght, unsigned int* con
     return converted;
 }
 
-char*   convert_4bpp_to_3bpp(const char* to_convert, size_t lenght, unsigned int* converted_lenght)
+char*   convert_4bpp_to_3bpp(const char* to_convert, unsigned int length, unsigned int* converted_length)
 {
-    unsigned int nb_tile = lenght / 32;
-    *converted_lenght = nb_tile * 24;
-    char* converted = (char*) malloc(*converted_lenght);
+    unsigned int nb_tile = length / 32;
+    *converted_length = nb_tile * 24;
+    char* converted = (char*) malloc(*converted_length);
 
-    for (unsigned int i = 0; i < lenght / 32; i++)
+    for (unsigned int i = 0; i < length / 32; i++)
     {
         tile8 tile = unpack_bpp4_tile(to_convert, i * 32);
         char* tileraw = pack_bpp3_tile(tile);
@@ -92,9 +92,9 @@ char*   convert_4bpp_to_3bpp(const char* to_convert, size_t lenght, unsigned int
     return converted;
 }
 
-unsigned int    compare_data(const char* data1, const char* data2, const unsigned int lenght)
+unsigned int    compare_data(const char* data1, const char* data2, const unsigned int length)
 {
-    for (unsigned int i = 0; i < lenght; i++)
+    for (unsigned int i = 0; i < length; i++)
     {
         if (data1[i] == data2[i])
             printf("\033[1;32m%02X\033[0m,", (unsigned char) data1[i]);
@@ -102,10 +102,10 @@ unsigned int    compare_data(const char* data1, const char* data2, const unsigne
         {
             printf("\nData differ at : %d\n", i);
             printf("Data1 : ");
-            for (unsigned j = 0; j < 10 && i + j < lenght; j++)
+            for (unsigned j = 0; j < 10 && i + j < length; j++)
                 printf("\033[1;31m%02X\033[0m,", (unsigned char) data1[i]);
             printf("\nData2 : ");
-            for (unsigned j = 0; j < 10 && i + j < lenght; j++)
+            for (unsigned j = 0; j < 10 && i + j < length; j++)
                 printf("\033[1;31m%02X\033[0m,", (unsigned char) data2[i]);
             printf("\n");
             return i;
@@ -156,8 +156,8 @@ void   verbose_printf(const char* fmt, ...)
 
 void    print_location(s_location loc)
 {
-    printf("0x%06X - %d bpp,  %s  - max lenght: %d\n", loc.address, loc.bpp,
-           loc.compression ? "Compressed" : "Uncompressed", loc.max_lenght);
+    printf("0x%06X - %d bpp,  %s  - max length: %d\n", loc.address, loc.bpp,
+           loc.compression ? "Compressed" : "Uncompressed", loc.max_length);
 }
 
 

@@ -23,14 +23,7 @@ Copyright 2017 Sylvain "Skarsnik" Colinet
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
-#ifdef __unix__
-    #include <unistd.h>
-#else
-	#define access(a, b) _access(a, b)
-    #define X_OK 00
-    #define W_OK 02
-	#define R_OK 04
-#endif
+#include <unistd.h>
 
 #include <sys/stat.h>
 
@@ -111,43 +104,43 @@ void	build_gfx_location()
     for (unsigned int i = 0; i < NB_POINTER_IN_TABLE; i++)
     {
         gfx_locations[i].address = gfx_table_pc_locations[i];
-        gfx_locations[i].max_lenght = 0;
+        gfx_locations[i].max_length = 0;
         gfx_locations[i].index = i;
-        if (i >= 0 && i <= 0x70)
+        if (i <= 0x70)
         {
             gfx_locations[i].bpp = 3;
             gfx_locations[i].compression = true;
             if (i != 0x70)
-                gfx_locations[i].max_lenght = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
+                gfx_locations[i].max_length = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
             else
-                gfx_locations[i].max_lenght = gfx_locations[i - 1].max_lenght;
+                gfx_locations[i].max_length = gfx_locations[i - 1].max_length;
         }
         if (i == 0x71 || i == 0x72)
         {
             gfx_locations[i].bpp = 2;
             gfx_locations[i].compression = true;
             if (i == 0x71)
-                gfx_locations[i].max_lenght = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
+                gfx_locations[i].max_length = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
             else
-                gfx_locations[i].max_lenght = 2048;
+                gfx_locations[i].max_length = 2048;
         }
         if (i >= 0x73 && i <= 0x7E)
         {
             gfx_locations[i].bpp = 3;
             gfx_locations[i].compression = false;
             if (i != 0x7E)
-                gfx_locations[i].max_lenght = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
+                gfx_locations[i].max_length = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
             else
-                gfx_locations[i].max_lenght = gfx_locations[i - 1].max_lenght;
+                gfx_locations[i].max_length = gfx_locations[i - 1].max_length;
         }
         if (i >= 0x7F && i <= 0xD9)
         {
             gfx_locations[i].bpp = 3;
             gfx_locations[i].compression = true;
             if (i != 0xD9)
-                gfx_locations[i].max_lenght = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
+                gfx_locations[i].max_length = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
             else
-                gfx_locations[i].max_lenght = gfx_locations[i - 1].max_lenght;
+                gfx_locations[i].max_length = gfx_locations[i - 1].max_length;
 
         }
         if (i >= 0xDA && i <= 0xDE)
@@ -155,9 +148,9 @@ void	build_gfx_location()
             gfx_locations[i].bpp = 2;
             gfx_locations[i].compression = true;
             if (i != 0xDE)
-                gfx_locations[i].max_lenght = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
+                gfx_locations[i].max_length = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
             else
-                gfx_locations[i].max_lenght = 2048;
+                gfx_locations[i].max_length = 2048;
         }
     }
 }
@@ -168,11 +161,11 @@ void	build_zcompress_gfx_location()
     zcompress_gfx_locations[0xDD].address = FONT_SPRITE_LOCATION;
     zcompress_gfx_locations[0xDD].bpp = 2;
     zcompress_gfx_locations[0xDD].compression = false;
-    zcompress_gfx_locations[0xDD].max_lenght = 2048 * 2;
+    zcompress_gfx_locations[0xDD].max_length = 2048 * 2;
     zcompress_gfx_locations[0xDE].address = LINK_SPRITE_LOCATION;
     zcompress_gfx_locations[0xDE].bpp = 4;
     zcompress_gfx_locations[0xDE].compression = false;
-    zcompress_gfx_locations[0xDE].max_lenght = 28672;
+    zcompress_gfx_locations[0xDE].max_length = 28672;
 }
 
 // Just list the table
@@ -203,15 +196,15 @@ void	extract_gfx(s_location* locations, bool single_file, const char* allfilenam
     char filename[20];
     FILE* rom_stream = my_fopen(rom_file, "r");
     FILE* gfx_file;
-    unsigned int	compressed_lenght;
-    unsigned int	decompressed_lenght;
-    unsigned int	to_convert_lenght;
-    unsigned int	converted_lenght;
+    unsigned int	compressed_length;
+    unsigned int	decompressed_length;
+    unsigned int	to_convert_length;
+    unsigned int	converted_length;
     char			*data;
-    unsigned int	read_lenght;
+    unsigned int    read_length;
     char			*uncompressed;
     char			*to_write;
-    unsigned int	write_lenght;
+    unsigned int	write_length;
     s_location		location;
 
     if (single_file)
@@ -225,29 +218,29 @@ void	extract_gfx(s_location* locations, bool single_file, const char* allfilenam
         //printf("==%02X==\n", i);
         //print_location(location);
         rom_fseek(rom_stream, pc_location);
-        read_lenght = fread(read_buffer, 1, location.max_lenght, rom_stream);
-        write_lenght = read_lenght;
-        to_convert_lenght = (2048 / 32) * 24;
+        read_length = fread(read_buffer, 1, location.max_length, rom_stream);
+        write_length = read_length;
+        to_convert_length = (2048 / 32) * 24;
         data = read_buffer;
         if (location.compression)
         {
             //printf("Compressed\n");
-            uncompressed = alttp_decompress_gfx(read_buffer, 0, read_lenght, &decompressed_lenght, &compressed_lenght);
-            //printf("Compressed lenght : %d  - Decompressed lenght : %d\n", compressed_lenght, decompressed_lenght);
-            if (read_lenght < compressed_lenght)
-                fprintf(stderr, "WARNING: compressed lenght read exceed the expected read lenght for : %02X\n", i);
+            uncompressed = alttp_decompress_gfx(read_buffer, 0, read_length, &decompressed_length, &compressed_length);
+            //printf("Compressed length : %d  - Decompressed length : %d\n", compressed_length, decompressed_length);
+            if (read_length < compressed_length)
+                fprintf(stderr, "WARNING: compressed length read exceed the expected read length for : %02X\n", i);
             if (uncompressed == NULL)
             {
                 fprintf(stderr, "Error while decompressing data for 0x%06X - %s\n", pc_location, alttp_decompression_error);
                 exit(1);
             }
             data = uncompressed;
-            to_convert_lenght = decompressed_lenght;
+            to_convert_length = decompressed_length;
         }
         if (location.bpp == 3)
         {
-            char *converted = convert_3bpp_to_4bpp(data, to_convert_lenght, &converted_lenght);
-            write_lenght = converted_lenght;
+            char *converted = convert_3bpp_to_4bpp(data, to_convert_length, &converted_length);
+            write_length = converted_length;
             to_write = converted;
         }
         if (location.bpp == 2)
@@ -255,33 +248,33 @@ void	extract_gfx(s_location* locations, bool single_file, const char* allfilenam
             if (location.compression)
             {
                 to_write = (char*) malloc(2048);
-                memcpy(to_write, data, decompressed_lenght);
-                if (decompressed_lenght != 2048)
-                    memset(to_write, 0, decompressed_lenght - 1);
-                write_lenght = 2048;
+                memcpy(to_write, data, decompressed_length);
+                if (decompressed_length != 2048)
+                    memset(to_write, 0, decompressed_length - 1);
+                write_length = 2048;
             } else {
-                write_lenght = location.max_lenght;
-                to_write = (char*) malloc(write_lenght);
-                memcpy(to_write, read_buffer, write_lenght);
+                write_length = location.max_length;
+                to_write = (char*) malloc(write_length);
+                memcpy(to_write, read_buffer, write_length);
             }
         }
         if (location.bpp == 4)
         {
-            write_lenght = location.max_lenght;
-            to_write = (char*) malloc(write_lenght);
-            memcpy(to_write, read_buffer, write_lenght);
+            write_length = location.max_length;
+            to_write = (char*) malloc(write_length);
+            memcpy(to_write, read_buffer, write_length);
         }
         if (location.compression)
             free(uncompressed);
 
         if (single_file)
         {
-            fwrite(to_write, 1, write_lenght, gfx_file);
+            fwrite(to_write, 1, write_length, gfx_file);
         } else {
             sprintf(filename, "SGFX%02X.bin", i);
             gfx_file = my_fopen(filename, "w");
             verbose_printf("Creating %s file from index %02X, location : %06X\n", filename, i, location.address);
-            fwrite(to_write, 1, write_lenght, gfx_file);
+            fwrite(to_write, 1, write_length, gfx_file);
             fclose(gfx_file);
         }
         free(to_write);
@@ -330,7 +323,7 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
 
     FILE* gfx_file = my_fopen(inject_file, "r");
     FILE* rom_stream = my_fopen(rom_file, "r+");
-    std_nintendo_compression_sanity_check = true;
+    //std_nintendo_compression_sanity_check = true;
 
     if (locations == zcompress_gfx_locations)
     {
@@ -361,7 +354,7 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
         //print_location(location);
         if (location.compression)
         {
-            unsigned int compressed_lenght;
+            unsigned int compressed_length;
             char* compressed;
             fseek(gfx_file, location.index * 2048, SEEK_SET);
             fread(read_buffer, 1, 2048, gfx_file);
@@ -370,11 +363,11 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
             {
                 converted = convert_4bpp_to_3bpp(read_buffer, 2048, &converted_size);
                 //printf("Converted size : %d\n", converted_size);
-                compressed = alttp_compress_gfx(converted, 0, converted_size, &compressed_lenght);
+                compressed = alttp_compress_gfx(converted, 0, converted_size, &compressed_length);
             }
             if (location.bpp == 2)
             {
-                compressed = alttp_compress_gfx(read_buffer, 0, 2048, &compressed_lenght);
+                compressed = alttp_compress_gfx(read_buffer, 0, 2048, &compressed_length);
             }
             if (compressed == NULL)
             {
@@ -384,7 +377,7 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
             unsigned int save_pos = ftell(rom_stream);
             if (0)
             {
-                printf("Compressed lenght :%d\n", compressed_lenght);
+                printf("Compressed length :%d\n", compressed_length);
                 printf("Before %d\n", save_pos);
                 rom_fseek(rom_stream, location.address);
                 fread(read_buffer, 1, 2048, rom_stream);
@@ -412,10 +405,10 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
                 fseek(rom_stream, save_pos, SEEK_SET);
                 printf("After %ld\n", ftell(rom_stream));
             }
-            verbose_printf("Writing at %06X, %d compressed bytes written\n", save_pos, compressed_lenght);
-            insertion_size[i] = compressed_lenght;
+            verbose_printf("Writing at %06X, %d compressed bytes written\n", save_pos, compressed_length);
+            insertion_size[i] = compressed_length;
             if (!simulation)
-                fwrite(compressed, 1, compressed_lenght, rom_stream);
+                fwrite(compressed, 1, compressed_length, rom_stream);
             free(compressed);
             if (converted != NULL)
                 free(converted);
@@ -491,6 +484,7 @@ int 	main(int ac, char *ag[])
     bool extract, inject, list, simulation, verbose, zmode;
     extract = false;
     inject = false;
+    list = false;
     simulation = false;
     verbose = false;
     zmode = false;
