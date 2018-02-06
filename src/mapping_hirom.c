@@ -57,10 +57,32 @@ int	hirom_snes_to_pc(const unsigned int snes_addr, char **info)
 
 int	hirom_pc_to_snes(const unsigned int pc_addr)
 {
-  unsigned int bank = pc_addr / 0x8000;
-  //unsigned int offset = pc_addr  & 0x00FFFF;
+  unsigned int bank = pc_addr >> 16;
+  unsigned int offset = pc_addr & 0x00FFFF;
 
+  //printf("%02X:%04X\n", bank, offset);
+  if (bank <= 0x3F && offset >= 0x8000)
+      return pc_addr;
   if (bank <= 0x3D)
       return pc_addr + 0x400000;
-  return pc_addr + + 0xFE0000;
+  return pc_addr + 0xFE0000;
 }
+
+int	hirom_sram_snes_to_pc(const unsigned int snes_addr)
+{
+    unsigned int bank = snes_addr >> 16;
+    unsigned int offset = snes_addr & 0x00FFFF;
+
+    if (bank >= 0x20 && bank <= 0x3F && offset >= 0x6000 && offset < 0x8000)
+        return (bank - 0x20) * 0x2000 + (offset - 0x6000);
+    return -1;
+}
+
+int	hirom_sram_pc_to_snes(const unsigned int pc_addr)
+{
+    unsigned int chuck_nb = pc_addr / 0x2000;
+    unsigned int rest = pc_addr % 0x2000;
+
+    return ((0x20 + chuck_nb) << 16) + 0x6000 + rest;
+}
+

@@ -136,6 +136,60 @@ void    testPCToHiROM(CuTest* tc)
     }
 }
 
+addr_test_t tab_lorom_sram[] = {
+    {0x705000, 0x5000},
+    {0x716000, 0xE000},
+    {0x7D0500, 0x68500},
+    {0xFE0550, 0x70550}
+};
+
+void    testSRAMLoROMToPC(CuTest* tc)
+{
+    for (int i = 0; i < 4; i++)
+    {
+      char *tmp = NULL;
+      asprintf(&tmp, "SRAM SNES to PC LoROM: Simple test %02X:%04X -> %X", tab_lorom_sram[i].snes_addr >> 16, tab_lorom_sram[i].snes_addr & 0x00FFFF, tab_lorom_sram[i].pc_addr);
+      CuAssertIntEquals_Msg(tc, tmp, tab_lorom_sram[i].pc_addr, rommapping_sram_snes_to_pc(tab_lorom_sram[i].snes_addr, LoROM, false));
+    }
+}
+
+void    testSRAMPCToLoROM(CuTest* tc)
+{
+    for (int i = 0; i < 4; i++)
+    {
+      char *tmp = NULL;
+      asprintf(&tmp, "Pc to SRAM LoROM: Simple test %X -> %02X:%04X", tab_lorom_sram[i].pc_addr, tab_lorom_sram[i].snes_addr >> 16, tab_lorom_sram[i].snes_addr & 0x00FFFF);
+      CuAssertIntEquals_Msg(tc, tmp, tab_lorom_sram[i].snes_addr, rommapping_sram_pc_to_snes(tab_lorom_sram[i].pc_addr, LoROM, false));
+    }
+}
+
+addr_test_t tab_hirom_sram[] = {
+    {0x206050, 0x50},
+    {0x287000, 0x11000}
+};
+
+void    testSRAMHiROMToPC(CuTest* tc)
+{
+    for (int i = 0; i < 2; i++)
+    {
+      char *tmp = NULL;
+      asprintf(&tmp, "SRAM SNES to PC HiROM: Simple test %02X:%04X -> %X", tab_hirom_sram[i].snes_addr >> 16, tab_hirom_sram[i].snes_addr & 0x00FFFF, tab_hirom_sram[i].pc_addr);
+      CuAssertIntEquals_Msg(tc, tmp, tab_hirom_sram[i].pc_addr, rommapping_sram_snes_to_pc(tab_hirom_sram[i].snes_addr, HiROM, false));
+    }
+}
+
+
+void    testSRAMPCToHiROM(CuTest* tc)
+{
+    for (int i = 0; i < 2; i++)
+    {
+      char *tmp = NULL;
+      asprintf(&tmp, "Pc to SRAM LoROM: Simple test %X -> %02X:%04X", tab_hirom_sram[i].pc_addr, tab_hirom_sram[i].snes_addr >> 16, tab_hirom_sram[i].snes_addr & 0x00FFFF);
+      CuAssertIntEquals_Msg(tc, tmp, tab_hirom_sram[i].snes_addr, rommapping_sram_pc_to_snes(tab_hirom_sram[i].pc_addr, HiROM, false));
+    }
+}
+
+
 CuSuite* StrUtilGetSuite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, testLoROMToPC);
@@ -143,6 +197,12 @@ CuSuite* StrUtilGetSuite() {
     SUITE_ADD_TEST(suite, testPCToLoROM);
     SUITE_ADD_TEST(suite, testHiROMtoPC);
     SUITE_ADD_TEST(suite, testHiROMtoPCErrors);
+    SUITE_ADD_TEST(suite, testPCToHiROM);
+    SUITE_ADD_TEST(suite, testSRAMLoROMToPC);
+    SUITE_ADD_TEST(suite, testSRAMPCToLoROM);
+    SUITE_ADD_TEST(suite, testSRAMHiROMToPC);
+    SUITE_ADD_TEST(suite, testSRAMPCToHiROM);
+
     return suite;
 }
 

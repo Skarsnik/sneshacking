@@ -67,3 +67,30 @@ int	lorom_pc_to_snes(const unsigned int pc_addr)
    
    return (bank << 16) + offset;
 }
+
+int lorom_sram_pc_to_snes(const unsigned int pc_addr)
+{   
+    int chuck_nb = pc_addr / 0x8000;
+    int rest = pc_addr % 0x8000;
+
+    if (chuck_nb <= 0xD)
+        return ((0x70 + chuck_nb) << 16) + rest;
+    if (chuck_nb == 0xE || chuck_nb == 0xF)
+        return ((0xF0 + chuck_nb) << 16) + rest;
+    return -1;
+}
+
+int lorom_sram_snes_to_pc(const unsigned int snes_addr)
+{
+    unsigned char	bank = snes_addr >> 16;
+    unsigned int	offset = snes_addr & 0x00FFFF;
+
+    // F0-FD are mirror of 70-7D
+    if (bank >= 0xF0 && bank <= 0xFD)
+        bank -= 0x80;
+    if (bank >= 0x70 && bank <= 0x7D && offset < 0x8000)
+        return (bank - 0x70) * 0x8000 + offset;
+    if ((bank == 0xFE || bank == 0xFF) && offset < 0x8000)
+        return ((bank - 0xFE) + 0xE) * 0x8000 + offset;
+    return -1;
+}

@@ -42,11 +42,18 @@ extern char *rommapping_error_text;
 int	rommapping_snes_to_pc(const unsigned int snes_addr, enum rom_type rom_type, bool header);
 int	rommapping_pc_to_snes(const unsigned int pc_addr, enum rom_type rom_type, bool header);
 
+int rommapping_sram_snes_to_pc(const unsigned int snes_addr, enum rom_type rom_type, bool header);
+int	rommapping_sram_pc_to_snes(const unsigned int pc_addr, enum rom_type rom_type, bool header);
+
 int	lorom_snes_to_pc(const unsigned int snes_addr, char** info);
+int	lorom_sram_snes_to_pc(const unsigned int snes_addr);
 int	lorom_pc_to_snes(const unsigned int pc_addr);
+int	lorom_sram_pc_to_snes(const unsigned int pc_addr);
 
 int	hirom_snes_to_pc(const unsigned int snes_addr, char** info);
+int	hirom_sram_snes_to_pc(const unsigned int snes_addr);
 int	hirom_pc_to_snes(const unsigned int pc_addr);
+int	hirom_sram_pc_to_snes(const unsigned int pc_addr);
 
 #ifdef __cplusplus
 }
