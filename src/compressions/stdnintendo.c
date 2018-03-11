@@ -378,7 +378,23 @@ unsigned int	create_compression_string(compression_piece* start, char *output, c
                 continue;
             }
         }
-        memcpy(output + pos, piece->argument, piece->argument_length);
+        if (piece->command == D_CMD_COPY_EXISTING)
+        {
+            char tmp[2];
+            if (mode == D_NINTENDO_C_MODE2)
+            {
+                tmp[0] = piece->argument[0];
+                tmp[1] = piece->argument[1];
+            }
+            if (mode == D_NINTENDO_C_MODE1)
+            {
+                tmp[0] = piece->argument[1];
+                tmp[1] = piece->argument[0];
+            }
+            memcpy(output + pos, tmp, 2);
+        } else {
+            memcpy(output + pos, piece->argument, piece->argument_length);
+        }
         pos += piece->argument_length;
         piece = piece->next;
     }
@@ -565,6 +581,11 @@ char*	std_nintendo_compress(const char* u_data, const unsigned int start, const 
             unsigned int p;
             unsigned int k;
             char *uncomp = std_nintendo_decompress(tmp, 0, 0, &p, &k, mode);
+            if (uncomp == NULL)
+            {
+                fprintf(stderr, "%s\n", std_nintendo_decompression_error);
+                return NULL;
+            }
 #ifdef MY_DEBUG
             debug_str = speHexString(uncomp, p);
 
