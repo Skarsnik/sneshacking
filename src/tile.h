@@ -27,7 +27,8 @@ extern "C" {
 
 typedef struct 
 {
-    char		data[64];
+    unsigned int    id;
+    char            data[64];
     unsigned int	palette_id;
 } tile8;
 
