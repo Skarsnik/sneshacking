@@ -413,7 +413,7 @@ char*	std_nintendo_compress(const char* u_data, const unsigned int start, const 
     free(debug_str);
 #endif
     // we will realloc later
-    char* compressed_data = (char*) malloc(length + 3); // Worse cas is a copy of the string with extended header (probably should abord if more)
+    char* compressed_data = (char*) malloc(length + 10); // Worse case should be a copy of the string with extended header 
     compression_piece* compressed_chain = new_compression_piece(1, 1, "aaa", 2);
     compression_piece* compressed_chain_start = compressed_chain;
 
@@ -485,7 +485,7 @@ char*	std_nintendo_compress(const char* u_data, const unsigned int start, const 
                 unsigned int current_pos_u = u_data_pos;
                 unsigned int copied_size = 0;
                 unsigned int search_start = start;
-                /* printf("Searching for : ");
+                /*printf("Searching for : ");
                  for (unsigned int i = 0; i < 8; i++)
                  {
                      printf("%02X ", (unsigned char) u_data[u_data_pos + i]);

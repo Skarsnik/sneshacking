@@ -25,6 +25,15 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 #include <string.h>
 
 
+tile8 unpack_bpp1_tile(const char* data, const unsigned int offset)
+{
+    tile8 tile;
+
+    for (unsigned int i = 0; i < 8; i++)
+        tile.data[i] = (data[offset] >> (7 - i)) & 0x01;
+}
+
+
 tile8 unpack_bpp2_tile(const char* data, const unsigned int offset)
 {
     return (unpack_bpp_tile(data, offset, 2));
@@ -40,12 +49,24 @@ tile8 unpack_bpp4_tile(const char* data, unsigned int offset)
     return (unpack_bpp_tile(data, offset, 4));
 }
 
+tile8 unpack_bpp8_tile(const char* data, const unsigned int offset)
+{
+    return (unpack_bpp_tile(data, offset, 8)
+}
+
+tile8   unpack_mode7_tile(const char* data, const unsigned int offset)
+{
+    tile8 tile;
+    memcpy(tile.data, data + offset, 64);
+    return tile;
+}
+
 
 tile8 unpack_bpp_tile(const char *data, const unsigned int offset, const unsigned bpp)
 {
     tile8	tile;
-    assert(bpp >= 2 && bpp <= 4);
-    unsigned int bpp_pos[4]; // More for conveniance and readibility
+    assert(bpp >= 2 && bpp <= 8);
+    unsigned int bpp_pos[8]; // More for conveniance and readibility
     for (int col = 0; col < 8; col++)
     {
         for (int row = 0; row < 8; row++)
@@ -64,13 +85,24 @@ tile8 unpack_bpp_tile(const char *data, const unsigned int offset, const unsigne
                 bpp_pos[2] = offset + 16 + col;
                 tile.data[col * 8 + row] |= ((data[bpp_pos[2]] & mask) == mask) << 2;
             }
-            if (bpp == 4)
+            if (bpp >= 4)
             {
                 // For 4 bitplanes, the 2 added bitplanes are interlaced like the first two.
                 bpp_pos[2] = offset + 16 + col * 2;
                 bpp_pos[3] = offset + 16 + col * 2 + 1;
                 tile.data[col * 8 + row] |= ((data[bpp_pos[2]] & mask) == mask) << 2;
                 tile.data[col * 8 + row] |= ((data[bpp_pos[3]] & mask) == mask) << 3;
+            }
+            if (bpp == 8)
+            {
+                bpp_pos[4] = offset + 32 + col * 2;
+                bpp_pos[5] = offset + 32 + col * 2 + 1;
+                bpp_pos[6] = offset + 48 + col * 2;
+                bpp_pos[7] = offset + 48 + col * 2 + 1;
+                tile.data[col * 8 + row] |= ((data[bpp_pos[4]] & mask) == mask) << 4;
+                tile.data[col * 8 + row] |= ((data[bpp_pos[5]] & mask) == mask) << 5;
+                tile.data[col * 8 + row] |= ((data[bpp_pos[6]] & mask) == mask) << 6;
+                tile.data[col * 8 + row] |= ((data[bpp_pos[7]] & mask) == mask) << 7;
             }
         }
     }
@@ -102,8 +134,13 @@ char*	pack_bpp4_tile(const tile8 tile)
     return pack_bpp_tile(tile, 4, &p);
 }
 
+char*   pack_bpp8_tile(const tile8 tile)
+{
+    unsigned int p = 1;
+    return pack_bpp_tile(tile, 8, &p);
+}
 
-#include <stdio.h>
+//#include <stdio.h>
 char*	pack_bpp_tile(tile8 tile, const unsigned int bpp, unsigned int *size)
 {
     char* output = (char*) malloc(bpp * 8);
@@ -128,10 +165,17 @@ char*	pack_bpp_tile(tile8 tile, const unsigned int bpp, unsigned int *size)
             }
             if (bpp == 3)
                 output[16 + col] += (char)( ((color & 4) == 4) << (7 - row));
-            if (bpp == 4)
+            if (bpp >= 4)
             {
                 output[16 + col * 2] += (char)( ((color & 4) == 4) << (7 - row));
                 output[16 + col * 2 + 1] += (char)( ((color & 8) == 8) << (7 - row));
+            }
+            if (bpp == 8)
+            {
+                output[32 + col * 2] += (char)( ((color & 16) == 16) << (7 - row));
+                output[32 + col * 2 + 1] += (char)( ((color & 32) == 32) << (7 - row));
+                output[48 + col * 2] += (char)( ((color & 64) == 64) << (7 - row));
+                output[48 + col * 2 + 1] += (char)( ((color & 128) == 128) << (7 - row));
             }
         }
     }
