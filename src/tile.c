@@ -27,10 +27,7 @@ Copyright 2016 Sylvain "Skarsnik" Colinet
 
 tile8 unpack_bpp1_tile(const char* data, const unsigned int offset)
 {
-    tile8 tile;
-
-    for (unsigned int i = 0; i < 8; i++)
-        tile.data[i] = (data[offset] >> (7 - i)) & 0x01;
+    return (unpack_bpp_tile(data, offset, 1));
 }
 
 
@@ -44,14 +41,14 @@ tile8 unpack_bpp3_tile(const char* data, const unsigned int offset)
     return (unpack_bpp_tile(data, offset, 3));
 }
 
-tile8 unpack_bpp4_tile(const char* data, unsigned int offset)
+tile8 unpack_bpp4_tile(const char* data, const unsigned int offset)
 {
     return (unpack_bpp_tile(data, offset, 4));
 }
 
 tile8 unpack_bpp8_tile(const char* data, const unsigned int offset)
 {
-    return (unpack_bpp_tile(data, offset, 8)
+    return (unpack_bpp_tile(data, offset, 8));
 }
 
 tile8   unpack_mode7_tile(const char* data, const unsigned int offset)
@@ -65,12 +62,17 @@ tile8   unpack_mode7_tile(const char* data, const unsigned int offset)
 tile8 unpack_bpp_tile(const char *data, const unsigned int offset, const unsigned bpp)
 {
     tile8	tile;
-    assert(bpp >= 2 && bpp <= 8);
+    assert(bpp >= 1 && bpp <= 8);
     unsigned int bpp_pos[8]; // More for conveniance and readibility
     for (int col = 0; col < 8; col++)
     {
         for (int row = 0; row < 8; row++)
         {
+            if (bpp == 1)
+            {
+                tile.data[col * 8 + row] = (data[offset + col] >> (7 - row)) & 0x01;
+                continue;
+            }
             /* SNES bpp format interlace each byte of the first 2 bitplanes.
              * | byte 1 of first bitplane | byte 1 of the second bitplane | byte 2 of first bitplane | byte 2 of second bitplane | ..
              */

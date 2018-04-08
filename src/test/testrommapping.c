@@ -7,6 +7,19 @@
 #include "rommapping.h"
 
 
+#define asprintf my_asprintf
+
+static char*   my_asprintf(const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    unsigned int needed = vsnprintf(NULL, 0, fmt, args);
+    char  *buffer = malloc(needed + 1);
+    vsnprintf(buffer, needed + 1, fmt, args);
+    return buffer;
+}
+
 typedef struct {
   int snes_addr;
   int pc_addr;

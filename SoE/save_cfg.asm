@@ -19,7 +19,7 @@
 
 ; Game-specific patches for save-state code
 
-org $C0FFD8
-	db $08		; set sram size to 256kb
+;org $C0FFD8
+;	db $08		; set sram size to 256kb
 
 ; End of game-specific patches	

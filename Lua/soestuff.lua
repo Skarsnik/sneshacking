@@ -111,22 +111,27 @@ local function load_sprite(idx)
 	   anim_ptr1 = memory.read_u24_le(0x7E0000 + idx),
 	   anim_ptr2 = memory.read_u24_le(0x7E0000 + idx + 3),
 	   rom_ptr = memory.read_u16_le(0x7E0000 + idx + 6),
-	   unknown1 = memory.read_u16_le(0x7E0000 + idx + 0x8),
-	   unknown2 = memory.read_u16_le(0x7E0000 + idx + 0xA),
-	   unknown3 = memory.read_u16_le(0x7E0000 + idx + 0xC),
-	   unknown4 = memory.read_u16_le(0x7E0000 + idx + 0xE),
+	   unknow = {},
+	   --unknown[1] = memory.read_u16_le(0x7E0000 + idx + 0x8), -- 00 
+	   --unknown[2] = memory.read_u16_le(0x7E0000 + idx + 0xA), -- 00 when moving
+	   --unknown[3] = memory.read_u16_le(0x7E0000 + idx + 0xC),
+	   --unknown[4] = memory.read_u16_le(0x7E0000 + idx + 0xE), -- counter
 	   pos_x = memory.read_u16_le(0x7E0000 + idx + 0x1A),
 	   pos_y = memory.read_u16_le(0x7E0000 + idx + 0x1C),
-	   unknown5 = memory.read_u16_le(0x7E0000 + idx + 0x1E),
+	   --unknown[5] = memory.read_u16_le(0x7E0000 + idx + 0x1E),
 	   z_pos = memory.read_u16_le(0x7E0000 + idx + 0x1E),
-	   unknown6 = memory.read_u16_le(0x7E0000 + idx + 0x20),
+	   --unknown[6] = memory.read_u16_le(0x7E0000 + idx + 0x20),
 	   direction = memory.read_u16_le(0x7E0000 + idx + 0x22),
 	   target = memory.read_u16_le(0x7E0000 + idx + 0x24),
-	   unknown7 = memory.read_u16_le(0x7E0000 + idx + 0x26),
-	   unknown8 = memory.read_u16_le(0x7E0000 + idx + 0x28),
+	   --unknown[7] = memory.read_u16_le(0x7E0000 + idx + 0x26),
+	   --unknown[8] = memory.read_u16_le(0x7E0000 + idx + 0x28),
 	   hp = memory.read_u16_le(0x7E0000 + idx + 0x2A),
-	   unknown9 = memory.read_u16_le(0x7E0000 + idx + 0x2C),
+	   --unknown[9] = memory.read_u16_le(0x7E0000 + idx + 0x2C),
 	   charge_lvl = memory.read_u16_le(0x7E0000 + idx + 0x2E),
+	   --unknown[10] = memory.read_u16_le(0x7E0000 + idx + 0x30),
+	   --unknown[11] = memory.read_u16_le(0x7E0000 + idx + 0x32),
+	   --unknown[12] = memory.read_u16_le(0x7E0000 + idx + 0x34),
+	   --unknown[13] = memory.read_u16_le(0x7E0000 + idx + 0x36),
 	   ptr_next = memory.read_u16_le(0x7E0000 + idx + 0x5E),
 	   stype = memory.read_u16_le(0x7E0000 + idx + 0x60),
 	   x_tile = memory.read_u8(0x7E0000 + idx + 0x62),
@@ -135,7 +140,51 @@ local function load_sprite(idx)
 	   diagev_flag = memory.read_u16_le(0x7E0000 + idx + 0x68),
 	   dmg_taken = memory.read_u16_le(0x7E0000 + idx + 0x76)
 	}
+	sprite['unknow'][1] = memory.read_u16_le(0x7E0000 + idx + 0x8) -- 00
+	sprite['unknow'][2] = memory.read_u16_le(0x7E0000 + idx + 0xA)
+	sprite['unknow'][3] = memory.read_u16_le(0x7E0000 + idx + 0xC)
+	sprite['unknow'][4] = memory.read_u16_le(0x7E0000 + idx + 0xE) -- counter
+	sprite['unknow'][5] = memory.read_u16_le(0x7E0000 + idx + 0x1E)
+	sprite['unknow'][6] = memory.read_u16_le(0x7E0000 + idx + 0x20)
+	sprite['unknow'][7] = memory.read_u16_le(0x7E0000 + idx + 0x26)
+	sprite['unknow'][8] = memory.read_u16_le(0x7E0000 + idx + 0x28)
+	sprite['unknow'][9] = memory.read_u16_le(0x7E0000 + idx + 0x2C)
+	for i = 0, 23 do
+	   sprite['unknow'][i + 10] = memory.read_u16_le(0x7E0000 + idx + 0x30 + i * 2)
+	end
+	sprite['unknow'][34] = memory.read_u16_le(0x7E0000 + idx + 0x6A)
+	sprite['unknow'][35] = memory.read_u16_le(0x7E0000 + idx + 0x6C)
+	sprite['unknow'][36] = memory.read_u16_le(0x7E0000 + idx + 0x6E)
+	sprite['unknow'][37] = memory.read_u16_le(0x7E0000 + idx + 0x70)
+	sprite['unknow'][38] = memory.read_u16_le(0x7E0000 + idx + 0x72)
+	sprite['unknow'][39] = memory.read_u16_le(0x7E0000 + idx + 0x74)
+	sprite['unknow'][40] = memory.read_u16_le(0x7E0000 + idx + 0x78)
+	sprite['unknow'][41] = memory.read_u16_le(0x7E0000 + idx + 0x7A)
+	sprite['unknow'][42] = memory.read_u16_le(0x7E0000 + idx + 0x7C)
+	sprite['unknow'][43] = memory.read_u16_le(0x7E0000 + idx + 0x7E)
+	sprite['unknow'][44] = memory.read_u16_le(0x7E0000 + idx + 0x80)
+	sprite['unknow'][45] = memory.read_u16_le(0x7E0000 + idx + 0x82)
+	sprite['unknow'][46] = memory.read_u16_le(0x7E0000 + idx + 0x84)
+	sprite['unknow'][47] = memory.read_u16_le(0x7E0000 + idx + 0x86)
+	sprite['unknow'][48] = memory.read_u16_le(0x7E0000 + idx + 0x88)
+	sprite['unknow'][49] = memory.read_u16_le(0x7E0000 + idx + 0x8A)
+	sprite['unknow'][50] = memory.read_u16_le(0x7E0000 + idx + 0x8C)
+	sprite['unknow'][51] = memory.read_u16_le(0x7E0000 + idx + 0x8E)
+	
+	
+	-- print_sprite_info(idx)
 	return sprite
+end
+
+local function print_sprite_info(idx)
+    console.writeline(string.format("=====%04X=====", idx))
+	for i = 0, 8 do
+	   local bytes = memory.readbyterange(0x7E0000 + idx + i * 16, 16)
+	   for k,v in pairs(bytes) do
+         console.write(string.format("%02X ", v))
+       end
+	   console.writeline("")
+	end
 end
 
 local function load_all_sprites()
@@ -150,6 +199,22 @@ local function load_all_sprites()
 end
 
 
+local function draw_map()
+  local startx = -(camera_x % 16)
+  local starty = -(camera_y % 16)
+  local box_x1 = startx
+  local box_y1 = starty
+  while box_x1 < 260 do
+    box_y1 = starty
+    while box_y1 < 230 do
+      gui.drawBox(box_x1, box_y1, box_x1+16, box_y1 + 16, 0xCCFF0000, 0x11FF0000)
+	  --gui.drawBox(box_x1, box_y1 + 1, box_x1+16, box_y1 + 16 + 1, 0xCC0000FF, 0x11FF0000)
+    box_y1 = box_y1 + 16
+    end
+    box_x1 = box_x1 + 16
+  end
+end
+
 
 local draw_boy_pos = function()
     local boy_x = memory.read_s16_le(0x7E4EA3)
@@ -161,9 +226,15 @@ local	function draw_sprites()
 	sprites = load_all_sprites()
 	gui.text(0, 0, "number of sprites : "..table.getn(sprites))
 	for i, sprite in pairs(sprites) do
-	    gui.text(0, 50 + i * 12, string.format("%d|%X - stype : %04X - pos[% 4d, % 4d] - HP: %02d | U1:%04X U2:%04X U3:%04X U4:%04X U5:%04X U6:%04X U7:%04X U8:%04X U9:%04X", i, 
-		               sprite['index'], sprite['stype'], sprite['pos_x'], sprite['pos_y'], sprite['hp'], sprite['unknown1'], sprite['unknown2'], sprite['unknown3'], sprite['unknown4'],
-					   sprite['unknown5'], sprite['unknown6'], sprite['unknown7'], sprite['unknown8'], sprite['unknown9'] ))
+	    gui.text(0, 50 + i * 24, string.format("%d|%X - stype : %04X - pos[% 4d, % 4d] - HP: %02d - Tile Pos[% 2d, % 2d]", --| U1:%04X U2:%04X U3:%04X U4:%04X U5:%04X U6:%04X U7:%04X U8:%04X U9:%04X", i, 
+		               i, sprite['index'], sprite['stype'], sprite['pos_x'], sprite['pos_y'], sprite['hp'], sprite['x_tile'], sprite['y_tile']))
+					   --sprite['unknown1'], sprite['unknown2'], sprite['unknown3'], sprite['unknown4'],
+					   --sprite['unknown5'], sprite['unknown6'], sprite['unknown7'], sprite['unknown8'], sprite['unknown9'] ))
+	    local tmpstr = ""
+		for j = 40, 51 do
+		  tmpstr = tmpstr .. string.format("|%d:%04X", j, sprite['unknow'][j])
+		end
+		gui.text(0, 50 + (i * 2 + 1) * 12, tmpstr)
         gameDrawBox(sprite['pos_x'] - 8 , sprite['pos_y'] - 8, sprite['pos_x'] + 8 , sprite['pos_y'] + 8, 0xFFFFFFFF, 0x7777FFFF)
 		gameDrawText(sprite['pos_x'] + 8, sprite['pos_y'] - 8, string.format("%04X", sprite['stype']))
 		gameDrawText(sprite['pos_x'] + 8, sprite['pos_y'] - 4, string.format("%d,%d", sprite['pos_x'], sprite['pos_y']))
@@ -176,6 +247,7 @@ local my_draw = function()
    camera_y = memory.read_s16_le(0x7E0110)
    draw_boy_pos()
    draw_sprites()
+   draw_map()
 end
 
 if is_snes9x then

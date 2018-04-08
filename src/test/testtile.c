@@ -8,10 +8,18 @@
 #include <string.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <unistd.h>
+//#include <unistd.h>
 #include "CuTest.h"
 #include "tile.h"
 
+const char testtiledatabpp1[] = {0, 1, 0, 1, 0, 1, 0, 1,
+                                 1, 0, 1, 0, 1, 0, 1, 0,
+                                 0, 1, 0, 1, 0, 1, 0, 1,
+                                 1, 0, 1, 0, 0, 0, 1, 0,
+                                 0, 1, 0, 0, 0, 1, 0, 1,
+                                 1, 0, 1, 0, 1, 0, 1, 0,
+                                 0, 1, 0, 1, 0, 1, 0, 1,
+                                 1, 0, 1, 0, 1, 0, 1, 0};
 
 
 const char testtiledatabpp2[] = {0, 1, 2, 3, 3, 2, 1, 0,
@@ -54,6 +62,24 @@ const char testtiledatabpp8[] = {0, 1, 2, 3, 4, 5, 6 , 7,
                                 0xC5, 0xFF, 0xC5, 0xFF, 0xC5, 0xFF, 0xC5, 0xFF
                         };
 
+
+void    testUnpackBPP1Tile(CuTest* tc)
+{
+    char buffer[8];
+    char plop[8] = {0x55, 0xAA, 0x55, 0xA2, 0x45, 0xAA, 0x55, 0xAA};
+    tile8   tile;
+
+    int fd = open("testsnestilebpp1.tl", O_RDONLY);
+    if (fd == -1)
+    {
+        fprintf(stderr, "Can't open testsnestilebpp1.tl : %s\n", strerror(errno));
+        return ;
+    }
+    int p = read(fd, buffer, 8);
+    tile = unpack_bpp1_tile(buffer, 0);
+    CuAssertDataEquals_Msg(tc, "BPP1 simple test (using testsnestilebpp1.tl)",
+                                testtiledatabpp1, 64, tile.data);
+}
 
 void	testUnpackBPP2Tile(CuTest* tc)
 {
@@ -176,6 +202,7 @@ void	testPackBPP4Tile(CuTest* tc)
 
 CuSuite* StrUtilGetSuite() {
     CuSuite* suite = CuSuiteNew();
+    SUITE_ADD_TEST(suite, testUnpackBPP1Tile);
     SUITE_ADD_TEST(suite, testUnpackBPP2Tile);
     SUITE_ADD_TEST(suite, testUnpackBPP3Tile);
     SUITE_ADD_TEST(suite, testUnpackBPP4Tile);
