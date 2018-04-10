@@ -140,6 +140,25 @@ void	testUnpackBPP4Tile(CuTest* tc)
                            testtiledatabpp4, 64, tile.data);
 }
 
+void	testPackBPP1Tile(CuTest* tc)
+{
+    tile8	tile;
+    char	buffer[8];
+    memcpy(tile.data, testtiledatabpp1, 64);
+    
+    int fd = open("testsnestilebpp1.tl", O_RDONLY);
+
+    if (fd == -1)
+    {
+        fprintf(stderr, "Can't open testsnestilebpp1.tl : %s\n", strerror(errno));
+        return ;
+    }
+    read(fd, buffer, 8);
+ 
+    CuAssertDataEquals_Msg(tc, "packing BPP1 tile)",
+                           buffer, 8, pack_bpp1_tile(tile));
+}
+
 void	testPackBPP2Tile(CuTest* tc)
 {
     tile8	tile;
@@ -206,6 +225,7 @@ CuSuite* StrUtilGetSuite() {
     SUITE_ADD_TEST(suite, testUnpackBPP2Tile);
     SUITE_ADD_TEST(suite, testUnpackBPP3Tile);
     SUITE_ADD_TEST(suite, testUnpackBPP4Tile);
+    SUITE_ADD_TEST(suite, testPackBPP1Tile);
     SUITE_ADD_TEST(suite, testPackBPP2Tile);
     SUITE_ADD_TEST(suite, testPackBPP3Tile);
     SUITE_ADD_TEST(suite, testPackBPP4Tile);
