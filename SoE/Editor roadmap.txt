@@ -1,0 +1,34 @@
+Two majors blocker/step are :
+Finding the compression routine and implementing the decompression/compression
+Figuring the structure of map information
+
+
+All figuring part are basicly trying to find out ROM location and structure
+and involve lot of research (reading code/trace/poking memory)
+
+
+First step :
+Doing an enemy editor based on Assassin gamefaq info (hp/dmg/whatever)
+Figuring where enemies sprite are located
+This could take quite some time locating routines involved and where are the table for this
+
+Figuring and implement gfx compression/decompression
+
+Second step :
+Map viewer
+Trying to redraw a map:
+Finding the information
+Hoping the compression is the same than GFX
+
+Adding other map information
+- Figuring enemy placement
+- Colision
+- Special event (npc/trigger/pick up)
+
+Probably exporting/importing all this stuff to Tiled format
+to avoid writing an editor from scratch.
+
+NPC dialog :
+This should be easier
+Figuring how NPC work
+
