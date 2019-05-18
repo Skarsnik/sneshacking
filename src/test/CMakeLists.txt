@@ -10,6 +10,7 @@ add_executable(testnintendocompression CuTest.c testnintendocompression.c ../com
 add_executable(testtile CuTest.c testtile.c ../tile.c)
 add_executable(testrommaping CuTest.c testrommapping.c ../mapping_lorom.c ../rommapping.c ../mapping_hirom.c)
 add_executable(testpalette CuTest.c testpalette.c ../palette.c)
+add_executable(testrominfo CuTest.c testrominfo.c ../rominfo.c)
 
 include_directories(../)
 

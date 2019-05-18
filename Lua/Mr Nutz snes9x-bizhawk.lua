@@ -314,7 +314,8 @@ local my_draw = function()
   gui.drawBox(hitbox_x1, hitbox_y1, hitbox_x2, hitbox_y2, Mrnut_hitbox_color_outline, Mrnut_hitbox_color )
   
   -- Draw Mr. Nutz x/y "center" or pos? kinda weird
-  draw_cross(camx, camy, posx, posy)
+  draw_cross(camx, camy, (player_x2 + player_x1) / 2, (player_y2 + player_y1) / 2)
+  gui.drawLine(player_x1 - camx, player_y1 - 78 - camy, player_x2 - camx, player_y1 - 78 - camy, 0xFF7777FF)
   
   DrawNiceText(160, 150, "HSpeed: " .. hspeed)
   DrawNiceText(160, 155, "VSpeed: " .. vspeed_text)
