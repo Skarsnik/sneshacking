@@ -26,6 +26,7 @@ extern "C" {
 struct rom_infos {
     enum rom_type   type;
     bool            fastrom;
+    bool            make_sense;
     char            title[21];
     unsigned int    size;
     unsigned int    sram_size;
