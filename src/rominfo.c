@@ -19,5 +19,8 @@ struct rom_infos*    get_rom_info(const char* data)
     toret->version = data[27];
     toret->checksum_comp = (data[29] << 8) | data[28];
     toret->checksum = (data[31] << 8) | data[30];
+    toret->make_sense = false;
+    if ((toret->checksum ^ toret->checksum_comp) == 0xFFFF)
+        toret->make_sense = true;
     return toret;
 }

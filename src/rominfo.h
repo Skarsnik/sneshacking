@@ -1,6 +1,7 @@
 #ifndef H_ROM_INFO_H
 #define H_ROM_INFO_H
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "rommapping.h"
 
@@ -17,6 +18,11 @@ $xFDC	Checksum complement.
 $xFDE	Checksum.
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 struct rom_infos {
     enum rom_type   type;
     bool            fastrom;
@@ -30,5 +36,9 @@ struct rom_infos {
 };
 
 struct rom_infos* get_rom_info(const char* data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
