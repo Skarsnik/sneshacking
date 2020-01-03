@@ -87,7 +87,7 @@ local stype_to_name = {
 -- 7E3DE5 to 7E4E88 = Monster/NPC data for the current room. Each Monster/NPC gets x8E bytes of data.
                   -- x00-x02 = Sprite/Animation script pointer
                   -- x03-x05 = Sprite/Animation script pointer
-                  -- x06-x07 = Partial pointer to a ROM location with Monster/NPC data
+                  -- x06-x07 = Partial pointer to a ROM location with Monster/NPC data / likely gfx index
                   -- x1A-x1B = X position on map
                   -- x1C-x1D = Y position on map
                   -- x22-x23 = Used to determine the direction creature is facing
@@ -107,6 +107,7 @@ local stype_to_name = {
 				  
 local function load_sprite(idx)
 	local sprite = {
+     name = "none",
 	   index = idx,
 	   anim_ptr1 = memory.read_u24_le(0x7E0000 + idx),
 	   anim_ptr2 = memory.read_u24_le(0x7E0000 + idx + 3),
@@ -139,7 +140,22 @@ local function load_sprite(idx)
 	   diagev = memory.read_u16_le(0x7E0000 + idx + 0x66),
 	   diagev_flag = memory.read_u16_le(0x7E0000 + idx + 0x68),
 	   dmg_taken = memory.read_u16_le(0x7E0000 + idx + 0x76)
-	}
+  }
+  local piko = memory.read_u24_le(0xCE0000 + sprite['stype'])
+  --console.writeline(string.format("%04X %06X", sprite['stype'] + 0xCE0000 + 0xB678 - 0xA26, piko))
+  local bytesname = memory.readbyterange(piko, 32)
+  local strname = ''
+  for i=0, (32 - 1) do
+     --console.write(string.format("%d :  %d", bytesname[i], tonumber(bytesname[i], 16)))
+     --console.write('-')
+     if bytesname[i] == 0 then
+        break
+     end
+     strname = strname .. string.char(bytesname[i])
+  end
+  --console.writeline(strname)
+  --console.writeline(memory.read_u16_le(0xCE0000 + sprite['stype'] + 0xD))
+  sprite['name'] = strname
 	sprite['unknow'][1] = memory.read_u16_le(0x7E0000 + idx + 0x8) -- 00
 	sprite['unknow'][2] = memory.read_u16_le(0x7E0000 + idx + 0xA)
 	sprite['unknow'][3] = memory.read_u16_le(0x7E0000 + idx + 0xC)
@@ -219,15 +235,15 @@ end
 local draw_boy_pos = function()
     local boy_x = memory.read_s16_le(0x7E4EA3)
 	local boy_y = memory.read_s16_le(0x7E4EA5)
-	gameDrawBox(boy_x - 8, boy_y - 8, boy_x + 8, boy_y + 8, 0xFFFFFFFF, 0x7777FFFF)
+  gameDrawBox(boy_x - 8, boy_y - 8, boy_x + 8, boy_y + 8, 0xFFFFFFFF, 0x7777FFFF)
 end
 
 local	function draw_sprites()
 	sprites = load_all_sprites()
 	gui.text(0, 0, "number of sprites : "..table.getn(sprites))
 	for i, sprite in pairs(sprites) do
-	    gui.text(0, 50 + i * 24, string.format("%d|%X - stype : %04X - pos[% 4d, % 4d] - HP: %02d - Tile Pos[% 2d, % 2d]", --| U1:%04X U2:%04X U3:%04X U4:%04X U5:%04X U6:%04X U7:%04X U8:%04X U9:%04X", i, 
-		               i, sprite['index'], sprite['stype'], sprite['pos_x'], sprite['pos_y'], sprite['hp'], sprite['x_tile'], sprite['y_tile']))
+	    gui.text(0, 50 + i * 24, string.format("%d|%X - stype : %04X/%04X - pos[% 4d, % 4d] - HP: %02d - Tile Pos[% 2d, % 2d]", --| U1:%04X U2:%04X U3:%04X U4:%04X U5:%04X U6:%04X U7:%04X U8:%04X U9:%04X", i, 
+		               i, sprite['index'], sprite['stype'], sprite['rom_ptr'], sprite['pos_x'], sprite['pos_y'], sprite['hp'], sprite['x_tile'], sprite['y_tile']))
 					   --sprite['unknown1'], sprite['unknown2'], sprite['unknown3'], sprite['unknown4'],
 					   --sprite['unknown5'], sprite['unknown6'], sprite['unknown7'], sprite['unknown8'], sprite['unknown9'] ))
 	    local tmpstr = ""
@@ -238,7 +254,8 @@ local	function draw_sprites()
         gameDrawBox(sprite['pos_x'] - 8 , sprite['pos_y'] - 8, sprite['pos_x'] + 8 , sprite['pos_y'] + 8, 0xFFFFFFFF, 0x7777FFFF)
 		gameDrawText(sprite['pos_x'] + 8, sprite['pos_y'] - 8, string.format("%04X", sprite['stype']))
 		gameDrawText(sprite['pos_x'] + 8, sprite['pos_y'] - 4, string.format("%d,%d", sprite['pos_x'], sprite['pos_y']))
-		gameDrawText(sprite['pos_x'] - 8, sprite['pos_y'] - 8, string.format("%04X", sprite['index']))
+    gameDrawText(sprite['pos_x'] - 8, sprite['pos_y'] - 8, string.format("%04X", sprite['index']))
+    gameDrawText(sprite['pos_x'] - 8, sprite['pos_y'] - 4, sprite['name'])
     end
 end
 
