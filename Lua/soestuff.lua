@@ -88,16 +88,10 @@ if emu then
   fonth = 2 -- font is bigger in mesen
   is_mesen = true
   memory = {}
+  gui = {}
+  event = {}
   local decode_addr = function(addr)
-    -- FIXME: this is a quick hack. is this really not implemented in mesen?
-    bank = bit.rshift(addr,16)
-    if bank == 0x7e then
-      return bit.band(addr,0x00ffff), emu.memType.workRam
-    elseif bank == 0x7f then
-      return bit.band(addr,0x00ffff)+0x10000, emu.memType.workRam
-    else
-      return bit.band(addr,0x7fffff), emu.memType.prgRom
-    end
+    return addr, emu.memType.cpu
   end
   memory.usememorydomain = function()
     -- mesen works differently
@@ -140,7 +134,14 @@ if emu then
     return val
   end
   memory.read_u16_be = function(addr) return bit.rshift(bit.bswap(memory.read_u16_le(addr)),16) end
-  gui = {}
+  memory.readbyterange = function(addr,len)
+    res = {}
+    local addr,t = decode_addr(addr)
+    for i=0,len-1 do
+      res[i] = emu.read(addr+i, t, false)
+    end
+    return res
+  end
   local color_b2m = function(bizhawk_color)
     -- if numeric then same as bizhawk but alpha is inverse
     if bizhawk_color == nil then return nil end
@@ -168,7 +169,6 @@ if emu then
     if y2<y1 then; local tmp=y1; y1=y2; y2=tmp; end
     return gui.drawRectangle(x1,y1,x2-x1+1,y2-y1+1,outline_color,fill_color)
   end
-  event = {}
   event.onframeend = function(luaf)
     emu.addEventCallback(luaf, emu.eventType.endFrame)
   end
