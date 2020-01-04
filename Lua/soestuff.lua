@@ -1,7 +1,178 @@
------------------------------------------------
--- Bizhawk compatibility layer by Nethraz
+-- configuration
+show_tiles = false
+show_mapdata = true
+show_sprite_data = false
+--pos_fmt = "%d,%d"
+pos_fmt = "%3X,%3X"
 
-if not event then
+-- implement required bitops for mesen from
+-- https://github.com/AlberTajuelo/bitop-lua/
+if not bit then
+  bit = {}
+  local floor = math.floor
+  local function memoize(f)
+    local mt = {}
+    local t = setmetatable({}, mt)
+    function mt:__index(k)
+      local v = f(k)
+      t[k] = v
+      return v
+    end
+    return t
+  end
+
+  local function make_bitop_uncached(t, m)
+    local function bitop(a, b)
+      local res,p = 0,1
+      while a ~= 0 and b ~= 0 do
+        local am, bm = a%m, b%m
+        res = res + t[am][bm]*p
+        a = (a - am) / m
+        b = (b - bm) / m
+        p = p*m
+      end
+      res = res + (a+b) * p
+      return res
+    end
+    return bitop
+  end
+  
+  local function make_bitop(t)
+    local op1 = make_bitop_uncached(t, 2^1)
+    local op2 = memoize(function(a)
+      return memoize(function(b)
+        return op1(a, b)
+      end)
+    end)
+    return make_bitop_uncached(op2, 2^(t.n or 1))
+  end
+  bit.bxor = make_bitop {[0]={[0]=0,[1]=1},[1]={[0]=1,[1]=0}, n=4}
+  bit.band = function(a,b) return ((a+b) - bit.bxor(a,b))/2 end
+  bit.rshift = function(a,disp)
+    if disp < 0 then return bit.lshift(a,-disp) end
+    return floor(a % 2^32 / 2^disp)
+  end
+  bit.lshift = function(a,disp)
+    if disp < 0 then return rshift(a,-disp) end
+    return (a * 2^disp) % 2^32
+  end
+  bit.bswap = function(x)
+    local a = band(x, 0xff); x = rshift(x, 8)
+    local b = band(x, 0xff); x = rshift(x, 8)
+    local c = band(x, 0xff); x = rshift(x, 8)
+    local d = band(x, 0xff)
+    return lshift(lshift(lshift(a, 8) + b, 8) + c, 8) + d
+  end
+  bit.rrotate = function(x, disp)
+    disp = disp % 32
+    local low = bit.band(x, 2^disp-1)
+    return bit.rshift(x, disp) + bit.lshift(low, 32-disp)
+  end
+  bit.lrotate = function(x, disp)
+    return bit.rrotate(x, -disp)
+  end
+  bit.rol = bit.lrotate
+  bit.ror = bit.rrotate
+end
+
+-- default fontsize
+local fontw = 1
+local fonth = 1
+
+-----------------------------------------------
+-- snes9x Bizhawk compatibility layer by Nethraz
+-- + mesen compatibility layer by black_sliver
+if emu then
+  -- detect mesen by existance of 'emu'
+  fontw = 2 -- font is bigger in mesen
+  fonth = 2 -- font is bigger in mesen
+  is_mesen = true
+  memory = {}
+  local decode_addr = function(addr)
+    -- FIXME: this is a quick hack. is this really not implemented in mesen?
+    bank = bit.rshift(addr,16)
+    if bank == 0x7e then
+      return bit.band(addr,0x00ffff), emu.memType.workRam
+    elseif bank == 0x7f then
+      return bit.band(addr,0x00ffff)+0x10000, emu.memType.workRam
+    else
+      return bit.band(addr,0x7fffff), emu.memType.prgRom
+    end
+  end
+  memory.usememorydomain = function()
+    -- mesen works differently
+  end
+  memory.read_u8 = function(addr)
+    local addr,t = decode_addr(addr)
+    return emu.read(addr, t, false)
+  end
+  memory.read_s8 = function(addr)
+    local addr,t = decode_addr(addr)
+    return emu.read(addr, t, true)
+  end
+  memory.read_u16_le = function(addr)
+    local addr,t = decode_addr(addr)
+    return emu.read(addr, t, false) + 0x100*emu.read(addr+1, t, false)
+  end
+  memory.read_s16_le = function(addr)
+    local addr,t = decode_addr(addr)
+    return emu.readWord(addr, t, true)
+  end
+  memory.read_u24_le = function(addr)
+    local addr,t = decode_addr(addr)
+    return (emu.read(addr, t, false) + 0x100*emu.read(addr+1, t, false)
+           + 0x10000*emu.read(addr+2, t, false))
+  end
+  memory.read_s24_le = function(addr)
+    local val = memory.read_u24_le(addr)
+    if (val > 0x7fffff) then val = val - 0x800000 - 0x800000 end
+    return val
+  end
+  memory.read_u32_le = function(addr)
+    local addr,t = decode_addr(addr)
+    return (emu.read(addr, t, false) + 0x100*emu.read(addr+1, t, false)
+           + 0x10000*emu.read(addr+2, t, false)
+           + 0x1000000*emu.read(addr+3, t, false))
+  end
+  memory.read_s32_le = function(addr)
+    local val = memory.read_u32_le(addr)
+    if (val > 0x7fffffff) then val = val - 0x80000000 - 0x80000000 end
+    return val
+  end
+  memory.read_u16_be = function(addr) return bit.rshift(bit.bswap(memory.read_u16_le(addr)),16) end
+  gui = {}
+  local color_b2m = function(bizhawk_color)
+    -- if numeric then same as bizhawk but alpha is inverse
+    if bizhawk_color == nil then return nil end
+    return bit.band(bizhawk_color,0x00ffffff)+(0xff000000-bit.band(bizhawk_color,0xff000000))
+  end
+  gui.drawText = function(x,y,text,color)
+    emu.drawString(x,y,text,color_b2m(color))
+  end
+  gui.text = gui.drawText -- ???
+  gui.drawLine = function(x1,y1,x2,y2,color)
+    emu.drawLine(x1,y1,x2,y2,color_b2m(color))
+  end
+  gui.drawRectangle = function(x,y,w,h,outline_color,fill_color)
+    if outline_color == fill_color then
+      emu.drawRectangle(x,y,w,h,color_b2m(outline_color),true)
+    elseif color_b2m(fill_color) then
+      emu.drawRectangle(x,y,w,h,color_b2m(outline_color),false)
+      emu.drawRectangle(x+1,y+1,w-2,h-2,color_b2m(fill_color),true)
+    else
+      emu.drawRectangle(x,y,w,h,color_b2m(outline_color),false)
+    end
+  end
+  gui.drawBox = function(x1,y1,x2,y2,outline_color,fill_color)
+    if x2<x1 then; local tmp=x1; x1=x2; x2=tmp; end
+    if y2<y1 then; local tmp=y1; y1=y2; y2=tmp; end
+    return gui.drawRectangle(x1,y1,x2-x1+1,y2-y1+1,outline_color,fill_color)
+  end
+  event = {}
+  event.onframeend = function(luaf)
+    emu.addEventCallback(luaf, emu.eventType.endFrame)
+  end
+elseif not event then
   -- detect snes9x by absence of 'event'
   is_snes9x = true
   memory.usememorydomain = function()
@@ -13,7 +184,7 @@ if not event then
   memory.read_s16_le = memory.readwordsigned
   memory.read_u32_le = memory.readdword
   memory.read_s32_le = memory.readdwordsigned
-  memory.read_u24_le = function(addr)  end
+  memory.read_u24_le = function(addr) return memory.read_u16_le(addr) + 0x10000*memory.read_u8(addr+2) end
   memory.read_u16_be = function(addr) return bit.rshift(bit.bswap(memory.read_u16_le(addr)),16) end
   local color_b2s = function(bizhawk_color)
     if bizhawk_color == nil then return nil end
@@ -39,12 +210,14 @@ if not event then
     end
     gui.register(on_gui_update_new)
   end
+else
+  is_bizhawk = true
 end
 
 function DrawNiceText(text_x, text_y, str, color)
   --local sh = client.screenheight
   --local sw = client.screenwidth
-  if is_snes9x then 
+  if is_snes9x or is_mesen then 
     gui.text(text_x, text_y, str, color)
   else
     local calc_x = client.transformPointX(text_x)
@@ -60,18 +233,23 @@ end
 
 memory.usememorydomain("System Bus")
 
+local map_id
 local camera_x
 local camera_y
+local trig_off_x
+local trig_off_y
 
 
-				  
 local function gameDrawBox(x1, y1, x2, y2, color1, color2)
   --console.writeline("x1 : "..x1.." : y1 : "..y1)
   gui.drawBox(x1 - camera_x, y1 - camera_y, x2 - camera_x, y2 - camera_y, color1, color2)
 end
 
-local function gameDrawText(x, y, text)
-   DrawNiceText(x - camera_x, y - camera_y, text, 0xFF00FF00)
+local function gameDrawText(x, y, text, color)
+   if color == nil then -- default to freen
+      if mesen then color=0x7700ff00 else color=0xff00ff00 end
+   end
+   DrawNiceText(x - camera_x, y - camera_y, text, color)
 end
 
 
@@ -214,6 +392,39 @@ local function load_all_sprites()
     return sprites
 end
 
+local function load_trigger(ptr)
+  return {
+    pos_y = (memory.read_u8(ptr+0)-trig_off_y)*16,
+    pos_x = (memory.read_u8(ptr+1)-trig_off_x)*16,
+    h = (memory.read_u8(ptr+2)-memory.read_u8(ptr+0)-1)*16,
+    w = (memory.read_u8(ptr+3)-memory.read_u8(ptr+1)-1)*16,
+    script = memory.read_u16_le(ptr+4)
+  }
+end
+
+local function load_all_btriggers()
+  triggers = {}
+  local dataptr = memory.read_u24_le(0x9ffde7 + map_id*4);
+  --local mscriptlistptr = dataptr+0x0d+2;
+  local mscriptlistlen = memory.read_u16_le(dataptr+0x0d);
+  local bscriptlistptr = dataptr+0x0d+2+mscriptlistlen+2;
+  local bscriptlistlen = memory.read_u16_le(dataptr+0x0d+2+mscriptlistlen);
+  for ptr=bscriptlistptr,bscriptlistptr+bscriptlistlen-1,6 do
+    table.insert(triggers, load_trigger(ptr))
+  end
+  return triggers
+end
+
+local function load_all_steptriggers()
+  triggers = {}
+  local dataptr = memory.read_u24_le(0x9ffde7 + map_id*4);
+  local mscriptlistptr = dataptr+0x0d+2;
+  local mscriptlistlen = memory.read_u16_le(dataptr+0x0d);
+  for ptr=mscriptlistptr,mscriptlistptr+mscriptlistlen-1,6 do
+    table.insert(triggers, load_trigger(ptr))
+  end
+  return triggers
+end
 
 local function draw_map()
   local startx = -(camera_x % 16)
@@ -233,41 +444,67 @@ end
 
 
 local draw_boy_pos = function()
-    local boy_x = memory.read_s16_le(0x7E4EA3)
-	local boy_y = memory.read_s16_le(0x7E4EA5)
+  local boy_x = memory.read_s16_le(0x7E4EA3)
+  local boy_y = memory.read_s16_le(0x7E4EA5)
   gameDrawBox(boy_x - 8, boy_y - 8, boy_x + 8, boy_y + 8, 0xFFFFFFFF, 0x7777FFFF)
 end
 
-local	function draw_sprites()
-	sprites = load_all_sprites()
-	gui.text(0, 0, "number of sprites : "..table.getn(sprites))
-	for i, sprite in pairs(sprites) do
-	    gui.text(0, 50 + i * 24, string.format("%d|%X - stype : %04X/%04X - pos[% 4d, % 4d] - HP: %02d - Tile Pos[% 2d, % 2d]", --| U1:%04X U2:%04X U3:%04X U4:%04X U5:%04X U6:%04X U7:%04X U8:%04X U9:%04X", i, 
-		               i, sprite['index'], sprite['stype'], sprite['rom_ptr'], sprite['pos_x'], sprite['pos_y'], sprite['hp'], sprite['x_tile'], sprite['y_tile']))
-					   --sprite['unknown1'], sprite['unknown2'], sprite['unknown3'], sprite['unknown4'],
-					   --sprite['unknown5'], sprite['unknown6'], sprite['unknown7'], sprite['unknown8'], sprite['unknown9'] ))
-	    local tmpstr = ""
-		for j = 40, 51 do
-		  tmpstr = tmpstr .. string.format("|%d:%04X", j, sprite['unknow'][j])
-		end
-		gui.text(0, 50 + (i * 2 + 1) * 12, tmpstr)
-        gameDrawBox(sprite['pos_x'] - 8 , sprite['pos_y'] - 8, sprite['pos_x'] + 8 , sprite['pos_y'] + 8, 0xFFFFFFFF, 0x7777FFFF)
-		gameDrawText(sprite['pos_x'] + 8, sprite['pos_y'] - 8, string.format("%04X", sprite['stype']))
-		gameDrawText(sprite['pos_x'] + 8, sprite['pos_y'] - 4, string.format("%d,%d", sprite['pos_x'], sprite['pos_y']))
-    gameDrawText(sprite['pos_x'] - 8, sprite['pos_y'] - 8, string.format("%04X", sprite['index']))
-    gameDrawText(sprite['pos_x'] - 8, sprite['pos_y'] - 4, sprite['name'])
+local function draw_sprites()
+    sprites = load_all_sprites()
+    gui.text(0, 0, "number of sprites : "..#sprites)
+    for i, sprite in pairs(sprites) do
+        if show_sprite_data then
+            gui.text(0, 50 + i * 24, string.format("%d|%X - stype : %04X/%04X - pos[% 4d, % 4d] - HP: %02d - Tile Pos[% 2d, % 2d]", --| U1:%04X U2:%04X U3:%04X U4:%04X U5:%04X U6:%04X U7:%04X U8:%04X U9:%04X", i, 
+                     i, sprite['index'], sprite['stype'], sprite['rom_ptr'], sprite['pos_x'], sprite['pos_y'], sprite['hp'], sprite['x_tile'], sprite['y_tile']))
+                        --sprite['unknown1'], sprite['unknown2'], sprite['unknown3'], sprite['unknown4'],
+                        --sprite['unknown5'], sprite['unknown6'], sprite['unknown7'], sprite['unknown8'], sprite['unknown9'] ))
+            local tmpstr = ""
+            for j = 40, 51 do
+                tmpstr = tmpstr .. string.format("|%d:%04X", j, sprite['unknow'][j])
+            end
+            gui.text(0, 50 + (i * 2 + 1) * 12, tmpstr)
+        end
+        gameDrawBox(sprite['pos_x'] - 8*fontw , sprite['pos_y'] - 8*fonth, sprite['pos_x'] + 8 , sprite['pos_y'] + 8, 0xFFFFFFFF, 0x7777FFFF)
+        gameDrawText(sprite['pos_x'] + 8*fontw, sprite['pos_y'] - 8*fonth, string.format("%04X", sprite['stype']))
+        gameDrawText(sprite['pos_x'] + 8*fontw, sprite['pos_y'] - 4*fonth, string.format("%d,%d", sprite['pos_x'], sprite['pos_y']))
+        gameDrawText(sprite['pos_x'] - 8*fontw, sprite['pos_y'] - 8*fonth, string.format("%04X", sprite['index']))
+        gameDrawText(sprite['pos_x'] - 8*fontw, sprite['pos_y'] - 4*fonth, sprite['name'])
     end
 end
 
+local function draw_triggers(triggers, color)
+  for i, trigger in pairs(triggers) do
+    gameDrawBox(trigger['pos_x'], trigger['pos_y'], trigger['pos_x']+trigger['w']+15, trigger['pos_y']+trigger['h']+15,
+                0xFF000000+color, 0x77000000+color)
+  end
+end
+
+local function draw_btriggers()
+  local triggers = load_all_btriggers()
+  return draw_triggers(triggers, 0xffff00)
+end
+
+local function draw_steptriggers()
+  local triggers = load_all_steptriggers()
+  return draw_triggers(triggers, 0xff00ff)
+end
+
 local my_draw = function()
+   map_id = memory.read_u8(0x7E0ADB);
    camera_x = memory.read_s16_le(0x7E0112)
-   camera_y = memory.read_s16_le(0x7E0110)
+   camera_y = memory.read_s16_le(0x7E0114)
+   trig_off_x = memory.read_s16_le(0x7E0F86)
+   trig_off_y = memory.read_s16_le(0x7E0F88)
+   if show_tiles then draw_map() end -- draw map first as text is not always-on-top in mesen
+   draw_btriggers()
+   draw_steptriggers()
    draw_boy_pos()
    draw_sprites()
    draw_map()
+   if show_mapdata then gui.text(0, 231, string.format("Map ID: %02x, Trig Off: %02x %02x", map_id, trig_off_x, trig_off_y)) end
 end
 
-if is_snes9x then
+if is_snes9x or is_mesen then
   event.onframeend(my_draw)
 else
   while true do
