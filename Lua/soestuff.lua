@@ -2,8 +2,8 @@
 show_tiles = false
 show_mapdata = true
 show_sprite_data = false
---pos_fmt = "%d,%d"
-pos_fmt = "%3X,%3X"
+pos_fmt = "%d,%d"
+--pos_fmt = "%3X,%3X"
 
 -- implement required bitops for mesen from
 -- https://github.com/AlberTajuelo/bitop-lua/
@@ -465,10 +465,10 @@ local function draw_sprites()
             gui.text(0, 50 + (i * 2 + 1) * 12, tmpstr)
         end
         gameDrawBox(sprite['pos_x'] - 8*fontw , sprite['pos_y'] - 8*fonth, sprite['pos_x'] + 8 , sprite['pos_y'] + 8, 0xFFFFFFFF, 0x7777FFFF)
-        gameDrawText(sprite['pos_x'] + 8*fontw, sprite['pos_y'] - 8*fonth, string.format("%04X", sprite['stype']))
-        gameDrawText(sprite['pos_x'] + 8*fontw, sprite['pos_y'] - 4*fonth, string.format("%d,%d", sprite['pos_x'], sprite['pos_y']))
-        gameDrawText(sprite['pos_x'] - 8*fontw, sprite['pos_y'] - 8*fonth, string.format("%04X", sprite['index']))
         gameDrawText(sprite['pos_x'] - 8*fontw, sprite['pos_y'] - 4*fonth, sprite['name'])
+        gameDrawText(sprite['pos_x'] + 8*fontw, sprite['pos_y'] - 8*fonth, string.format("%04X", sprite['stype']))
+        gameDrawText(sprite['pos_x'] + 8*fontw, sprite['pos_y'] - 4*fonth, string.format(pos_fmt, sprite['pos_x'], sprite['pos_y']))
+        gameDrawText(sprite['pos_x'] - 8*fontw, sprite['pos_y'] - 8*fonth, string.format("%04X", sprite['index']))
     end
 end
 
@@ -500,7 +500,6 @@ local my_draw = function()
    draw_steptriggers()
    draw_boy_pos()
    draw_sprites()
-   draw_map()
    if show_mapdata then gui.text(0, 231, string.format("Map ID: %02x, Trig Off: %02x %02x", map_id, trig_off_x, trig_off_y)) end
 end
 
