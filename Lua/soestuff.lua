@@ -1,9 +1,18 @@
--- configuration
+-- configuration --
 show_tiles = false
 show_mapdata = true
 show_sprite_data = false
+show_lag = true
+show_lag_details = true
+show_actual_market_time = false
+FPS = 60.098475521 -- 50.0069789082 for PAL
 pos_fmt = "%d,%d"
 --pos_fmt = "%3X,%3X"
+lag_fmt = "Lag: %.1fs" -- change to .3f to get milliseconds
+det_lag_fmt = "Lag: %d=%3.1fs" -- this shows frames and seconds
+ext_lag_fmt = "Lag: %d+%d=%3.1fs" -- this includes missed VSync interrupts in arg2
+-- end of configuration --
+
 
 -- implement required bitops for mesen from
 -- https://github.com/AlberTajuelo/bitop-lua/
@@ -238,6 +247,10 @@ local camera_x
 local camera_y
 local trig_off_x
 local trig_off_y
+local frames0
+local timer0
+local emuframes = 0
+local market_running = false
 
 
 local function gameDrawBox(x1, y1, x2, y2, color1, color2)
@@ -451,7 +464,7 @@ end
 
 local function draw_sprites()
     sprites = load_all_sprites()
-    gui.text(0, 0, "number of sprites : "..#sprites)
+    gui.text(0, 0, string.format("Number of sprites:%2d",#sprites))
     for i, sprite in pairs(sprites) do
         if show_sprite_data then
             gui.text(0, 50 + i * 24, string.format("%d|%X - stype : %04X/%04X - pos[% 4d, % 4d] - HP: %02d - Tile Pos[% 2d, % 2d]", --| U1:%04X U2:%04X U3:%04X U4:%04X U5:%04X U6:%04X U7:%04X U8:%04X U9:%04X", i, 
@@ -489,6 +502,59 @@ local function draw_steptriggers()
   return draw_triggers(triggers, 0xff00ff)
 end
 
+local function seconds2str(t)
+   local mn = math.floor(t/60)
+   local sc = math.floor(t-60*mn)
+   t = math.floor((t- 60*mn - sc)*10)
+   return string.format("%02d:%02d.%d", mn,sc,t)
+end
+
+local function draw_timing()
+   local market = memory.read_u16_le(0x7E2513);
+   local timer  = memory.read_u24_le(0x7E0B19);
+   local frames = memory.read_u24_le(0x7E0100);
+   local dTimer = (timer-timer0)
+   if market>0 then -- market timer started
+      if not market_running then
+        emuframes = 0
+        frames0 = frames
+        timer0 = timer
+        dTimer = 0
+        market_running = true
+      end
+      if bit.band(memory.read_u8(0x7e225f),0x20)==0 then -- not vigor dead
+         local s = "Market: "
+         if bit.band(memory.read_u8(0x7e225d),0x08)==0x08 then -- market timer expired
+            s = s.."00:00.0"
+         else
+            s = s..seconds2str((bit.band(0xffff,market-timer+0xc4e0))/FPS)
+         end
+         if show_actual_market_time then
+            s = s.."/"..seconds2str((0xc4e0+(emuframes-dTimer))/FPS)
+         end
+         if show_lag then gui.text(0,213,s) else gui.text(0,222,s) end
+      else
+         market_running = false
+      end
+   else
+      market_running = false
+   end
+   if show_lag then
+      local dFrames = (frames-frames0)
+      -- NOTE: depending on where we start the script, we may have a diff of 1 in frame count
+      if emuframes-dFrames > 1 and show_lag_details then
+         gui.text(0, 222, string.format(ext_lag_fmt,
+            dFrames-dTimer, emuframes-dFrames, (emuframes-dTimer)/FPS))
+      elseif show_lag_details then
+         gui.text(0, 222, string.format(det_lag_fmt,
+            dFrames-dTimer, (dFrames-dTimer)/FPS))
+      else
+         gui.text(0, 222, string.format(lag_fmt,
+            (emuframes-dTimer)/FPS))
+      end
+   end
+end
+
 local my_draw = function()
    map_id = memory.read_u8(0x7E0ADB);
    camera_x = memory.read_s16_le(0x7E0112)
@@ -500,8 +566,13 @@ local my_draw = function()
    draw_steptriggers()
    draw_boy_pos()
    draw_sprites()
+   draw_timing()
    if show_mapdata then gui.text(0, 231, string.format("Map ID: %02x, Trig Off: %02x %02x", map_id, trig_off_x, trig_off_y)) end
+   emuframes = emuframes+1
 end
+
+frames0 = memory.read_u24_le(0x7E0100);
+timer0  = memory.read_u24_le(0x7E0B19);
 
 if is_snes9x or is_mesen then
   event.onframeend(my_draw)
