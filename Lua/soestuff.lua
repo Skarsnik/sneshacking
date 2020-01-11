@@ -92,7 +92,7 @@ local fonth = 1
 -- snes9x Bizhawk compatibility layer by Nethraz
 -- + mesen compatibility layer by black_sliver
 if emu and bizstring == nil then
-  -- detect mesen by existance of 'emu' and non-existance of memory
+  -- detect mesen by existance of 'emu' and absence of bizstring
   fontw = 2 -- font is bigger in mesen
   fonth = 2 -- font is bigger in mesen
   is_mesen = true
@@ -174,13 +174,15 @@ if emu and bizstring == nil then
     end
   end
   gui.drawBox = function(x1,y1,x2,y2,outline_color,fill_color)
-    if x2<x1 then; local tmp=x1; x1=x2; x2=tmp; end
-    if y2<y1 then; local tmp=y1; y1=y2; y2=tmp; end
+    if x2<x1 then local tmp=x1 ; x1=x2 ; x2=tmp end
+    if y2<y1 then local tmp=y1 ; y1=y2 ; y2=tmp end
     return gui.drawRectangle(x1,y1,x2-x1+1,y2-y1+1,outline_color,fill_color)
   end
-  event.onframeend = function(luaf)
-    emu.addEventCallback(luaf, emu.eventType.endFrame)
+  
+  event.onframeend = function(f)
+    emu.addEventCallback(f, emu.eventType.endFrame)
   end
+
 elseif not event then
   -- detect snes9x by absence of 'event'
   is_snes9x = true
@@ -219,6 +221,7 @@ elseif not event then
     end
     gui.register(on_gui_update_new)
   end
+
 else
   is_bizhawk = true
 end
