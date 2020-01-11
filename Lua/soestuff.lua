@@ -91,7 +91,7 @@ local fonth = 1
 -----------------------------------------------
 -- snes9x Bizhawk compatibility layer by Nethraz
 -- + mesen compatibility layer by black_sliver
-if emu and bizstring == nil
+if emu and bizstring == nil then
   -- detect mesen by existance of 'emu' and non-existance of memory
   fontw = 2 -- font is bigger in mesen
   fonth = 2 -- font is bigger in mesen
