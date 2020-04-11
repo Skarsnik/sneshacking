@@ -1,9 +1,22 @@
--- configuration
+-- configuration --
 show_tiles = false
 show_mapdata = true
+<<<<<<< HEAD
 show_sprite_data = true
+=======
+show_sprite_data = false
+show_lag = true
+show_lag_details = true
+show_actual_market_time = false
+FPS = 60.098475521 -- 50.0069789082 for PAL
+>>>>>>> 2973fc5215ccc99c7e159421ca1e542eb3f3a9ec
 pos_fmt = "%d,%d"
 --pos_fmt = "%3X,%3X"
+lag_fmt = "Lag: %.1fs" -- change to .3f to get milliseconds
+det_lag_fmt = "Lag: %d=%3.1fs" -- this shows frames and seconds
+ext_lag_fmt = "Lag: %d+%d=%3.1fs" -- this includes missed VSync interrupts in arg2
+-- end of configuration --
+
 
 -- implement required bitops for mesen from
 -- https://github.com/AlberTajuelo/bitop-lua/
@@ -82,8 +95,99 @@ local fonth = 1
 -----------------------------------------------
 -- snes9x Bizhawk compatibility layer by Nethraz
 -- + mesen compatibility layer by black_sliver
+if emu and bizstring == nil then
+  -- detect mesen by existance of 'emu' and absence of bizstring
+  fontw = 2 -- font is bigger in mesen
+  fonth = 2 -- font is bigger in mesen
+  is_mesen = true
+  memory = {}
+  gui = {}
+  event = {}
+  local decode_addr = function(addr)
+    return addr, emu.memType.cpu
+  end
+  memory.usememorydomain = function()
+    -- mesen works differently
+  end
+  memory.read_u8 = function(addr)
+    local addr,t = decode_addr(addr)
+    return emu.read(addr, t, false)
+  end
+  memory.read_s8 = function(addr)
+    local addr,t = decode_addr(addr)
+    return emu.read(addr, t, true)
+  end
+  memory.read_u16_le = function(addr)
+    local addr,t = decode_addr(addr)
+    return emu.read(addr, t, false) + 0x100*emu.read(addr+1, t, false)
+  end
+  memory.read_s16_le = function(addr)
+    local addr,t = decode_addr(addr)
+    return emu.readWord(addr, t, true)
+  end
+  memory.read_u24_le = function(addr)
+    local addr,t = decode_addr(addr)
+    return (emu.read(addr, t, false) + 0x100*emu.read(addr+1, t, false)
+           + 0x10000*emu.read(addr+2, t, false))
+  end
+  memory.read_s24_le = function(addr)
+    local val = memory.read_u24_le(addr)
+    if (val > 0x7fffff) then val = val - 0x800000 - 0x800000 end
+    return val
+  end
+  memory.read_u32_le = function(addr)
+    local addr,t = decode_addr(addr)
+    return (emu.read(addr, t, false) + 0x100*emu.read(addr+1, t, false)
+           + 0x10000*emu.read(addr+2, t, false)
+           + 0x1000000*emu.read(addr+3, t, false))
+  end
+  memory.read_s32_le = function(addr)
+    local val = memory.read_u32_le(addr)
+    if (val > 0x7fffffff) then val = val - 0x80000000 - 0x80000000 end
+    return val
+  end
+  memory.read_u16_be = function(addr) return bit.rshift(bit.bswap(memory.read_u16_le(addr)),16) end
+  memory.readbyterange = function(addr,len)
+    res = {}
+    local addr,t = decode_addr(addr)
+    for i=0,len-1 do
+      res[i] = emu.read(addr+i, t, false)
+    end
+    return res
+  end
+  local color_b2m = function(bizhawk_color)
+    -- if numeric then same as bizhawk but alpha is inverse
+    if bizhawk_color == nil then return nil end
+    return bit.band(bizhawk_color,0x00ffffff)+(0xff000000-bit.band(bizhawk_color,0xff000000))
+  end
+  gui.drawText = function(x,y,text,color)
+    emu.drawString(x,y,text,color_b2m(color))
+  end
+  gui.text = gui.drawText -- ???
+  gui.drawLine = function(x1,y1,x2,y2,color)
+    emu.drawLine(x1,y1,x2,y2,color_b2m(color))
+  end
+  gui.drawRectangle = function(x,y,w,h,outline_color,fill_color)
+    if outline_color == fill_color then
+      emu.drawRectangle(x,y,w,h,color_b2m(outline_color),true)
+    elseif color_b2m(fill_color) then
+      emu.drawRectangle(x,y,w,h,color_b2m(outline_color),false)
+      emu.drawRectangle(x+1,y+1,w-2,h-2,color_b2m(fill_color),true)
+    else
+      emu.drawRectangle(x,y,w,h,color_b2m(outline_color),false)
+    end
+  end
+  gui.drawBox = function(x1,y1,x2,y2,outline_color,fill_color)
+    if x2<x1 then local tmp=x1 ; x1=x2 ; x2=tmp end
+    if y2<y1 then local tmp=y1 ; y1=y2 ; y2=tmp end
+    return gui.drawRectangle(x1,y1,x2-x1+1,y2-y1+1,outline_color,fill_color)
+  end
+  
+  event.onframeend = function(f)
+    emu.addEventCallback(f, emu.eventType.endFrame)
+  end
 
-if not event then
+elseif not event then
   -- detect snes9x by absence of 'event'
   is_snes9x = true
   memory.usememorydomain = function()
@@ -121,6 +225,7 @@ if not event then
     end
     gui.register(on_gui_update_new)
   end
+
 else
   is_bizhawk = true
 end
@@ -149,6 +254,10 @@ local camera_x
 local camera_y
 local trig_off_x
 local trig_off_y
+local frames0
+local timer0
+local emuframes = 0
+local market_running = false
 
 
 local function gameDrawBox(x1, y1, x2, y2, color1, color2)
@@ -362,7 +471,7 @@ end
 
 local function draw_sprites()
     sprites = load_all_sprites()
-    gui.text(0, 0, "number of sprites : "..#sprites)
+    gui.text(0, 0, string.format("Number of sprites:%2d",#sprites))
     for i, sprite in pairs(sprites) do
         if show_sprite_data then
             gui.text(0, 50 + i * 30, string.format("%d|%X - stype : %04X/%04X - pos[% 4d, % 4d] - HP: %02d", 
@@ -399,6 +508,59 @@ local function draw_steptriggers()
   return draw_triggers(triggers, 0xff00ff)
 end
 
+local function seconds2str(t)
+   local mn = math.floor(t/60)
+   local sc = math.floor(t-60*mn)
+   t = math.floor((t- 60*mn - sc)*10)
+   return string.format("%02d:%02d.%d", mn,sc,t)
+end
+
+local function draw_timing()
+   local market = memory.read_u16_le(0x7E2513);
+   local timer  = memory.read_u24_le(0x7E0B19);
+   local frames = memory.read_u24_le(0x7E0100);
+   local dTimer = (timer-timer0)
+   if market>0 then -- market timer started
+      if not market_running then
+        emuframes = 0
+        frames0 = frames
+        timer0 = timer
+        dTimer = 0
+        market_running = true
+      end
+      if bit.band(memory.read_u8(0x7e225f),0x20)==0 then -- not vigor dead
+         local s = "Market: "
+         if bit.band(memory.read_u8(0x7e225d),0x08)==0x08 then -- market timer expired
+            s = s.."00:00.0"
+         else
+            s = s..seconds2str((bit.band(0xffff,market-timer+0xc4e0))/FPS)
+         end
+         if show_actual_market_time then
+            s = s.."/"..seconds2str((0xc4e0+(emuframes-dTimer))/FPS)
+         end
+         if show_lag then gui.text(0,213,s) else gui.text(0,222,s) end
+      else
+         market_running = false
+      end
+   else
+      market_running = false
+   end
+   if show_lag then
+      local dFrames = (frames-frames0)
+      -- NOTE: depending on where we start the script, we may have a diff of 1 in frame count
+      if emuframes-dFrames > 1 and show_lag_details then
+         gui.text(0, 222, string.format(ext_lag_fmt,
+            dFrames-dTimer, emuframes-dFrames, (emuframes-dTimer)/FPS))
+      elseif show_lag_details then
+         gui.text(0, 222, string.format(det_lag_fmt,
+            dFrames-dTimer, (dFrames-dTimer)/FPS))
+      else
+         gui.text(0, 222, string.format(lag_fmt,
+            (emuframes-dTimer)/FPS))
+      end
+   end
+end
+
 local my_draw = function()
    map_id = memory.read_u8(0x7E0ADB);
    camera_x = memory.read_s16_le(0x7E0112)
@@ -410,8 +572,13 @@ local my_draw = function()
    draw_steptriggers()
    draw_boy_pos()
    draw_sprites()
+   draw_timing()
    if show_mapdata then gui.text(0, 231, string.format("Map ID: %02x, Trig Off: %02x %02x", map_id, trig_off_x, trig_off_y)) end
+   emuframes = emuframes+1
 end
+
+frames0 = memory.read_u24_le(0x7E0100);
+timer0  = memory.read_u24_le(0x7E0B19);
 
 if is_snes9x or is_mesen then
   event.onframeend(my_draw)
