@@ -1,7 +1,7 @@
 -- configuration
 show_tiles = false
 show_mapdata = true
-show_sprite_data = false
+show_sprite_data = true
 pos_fmt = "%d,%d"
 --pos_fmt = "%3X,%3X"
 
@@ -82,97 +82,8 @@ local fonth = 1
 -----------------------------------------------
 -- snes9x Bizhawk compatibility layer by Nethraz
 -- + mesen compatibility layer by black_sliver
-if emu then
-  -- detect mesen by existance of 'emu'
-  fontw = 2 -- font is bigger in mesen
-  fonth = 2 -- font is bigger in mesen
-  is_mesen = true
-  memory = {}
-  gui = {}
-  event = {}
-  local decode_addr = function(addr)
-    return addr, emu.memType.cpu
-  end
-  memory.usememorydomain = function()
-    -- mesen works differently
-  end
-  memory.read_u8 = function(addr)
-    local addr,t = decode_addr(addr)
-    return emu.read(addr, t, false)
-  end
-  memory.read_s8 = function(addr)
-    local addr,t = decode_addr(addr)
-    return emu.read(addr, t, true)
-  end
-  memory.read_u16_le = function(addr)
-    local addr,t = decode_addr(addr)
-    return emu.read(addr, t, false) + 0x100*emu.read(addr+1, t, false)
-  end
-  memory.read_s16_le = function(addr)
-    local addr,t = decode_addr(addr)
-    return emu.readWord(addr, t, true)
-  end
-  memory.read_u24_le = function(addr)
-    local addr,t = decode_addr(addr)
-    return (emu.read(addr, t, false) + 0x100*emu.read(addr+1, t, false)
-           + 0x10000*emu.read(addr+2, t, false))
-  end
-  memory.read_s24_le = function(addr)
-    local val = memory.read_u24_le(addr)
-    if (val > 0x7fffff) then val = val - 0x800000 - 0x800000 end
-    return val
-  end
-  memory.read_u32_le = function(addr)
-    local addr,t = decode_addr(addr)
-    return (emu.read(addr, t, false) + 0x100*emu.read(addr+1, t, false)
-           + 0x10000*emu.read(addr+2, t, false)
-           + 0x1000000*emu.read(addr+3, t, false))
-  end
-  memory.read_s32_le = function(addr)
-    local val = memory.read_u32_le(addr)
-    if (val > 0x7fffffff) then val = val - 0x80000000 - 0x80000000 end
-    return val
-  end
-  memory.read_u16_be = function(addr) return bit.rshift(bit.bswap(memory.read_u16_le(addr)),16) end
-  memory.readbyterange = function(addr,len)
-    res = {}
-    local addr,t = decode_addr(addr)
-    for i=0,len-1 do
-      res[i] = emu.read(addr+i, t, false)
-    end
-    return res
-  end
-  local color_b2m = function(bizhawk_color)
-    -- if numeric then same as bizhawk but alpha is inverse
-    if bizhawk_color == nil then return nil end
-    return bit.band(bizhawk_color,0x00ffffff)+(0xff000000-bit.band(bizhawk_color,0xff000000))
-  end
-  gui.drawText = function(x,y,text,color)
-    emu.drawString(x,y,text,color_b2m(color))
-  end
-  gui.text = gui.drawText -- ???
-  gui.drawLine = function(x1,y1,x2,y2,color)
-    emu.drawLine(x1,y1,x2,y2,color_b2m(color))
-  end
-  gui.drawRectangle = function(x,y,w,h,outline_color,fill_color)
-    if outline_color == fill_color then
-      emu.drawRectangle(x,y,w,h,color_b2m(outline_color),true)
-    elseif color_b2m(fill_color) then
-      emu.drawRectangle(x,y,w,h,color_b2m(outline_color),false)
-      emu.drawRectangle(x+1,y+1,w-2,h-2,color_b2m(fill_color),true)
-    else
-      emu.drawRectangle(x,y,w,h,color_b2m(outline_color),false)
-    end
-  end
-  gui.drawBox = function(x1,y1,x2,y2,outline_color,fill_color)
-    if x2<x1 then; local tmp=x1; x1=x2; x2=tmp; end
-    if y2<y1 then; local tmp=y1; y1=y2; y2=tmp; end
-    return gui.drawRectangle(x1,y1,x2-x1+1,y2-y1+1,outline_color,fill_color)
-  end
-  event.onframeend = function(luaf)
-    emu.addEventCallback(luaf, emu.eventType.endFrame)
-  end
-elseif not event then
+
+if not event then
   -- detect snes9x by absence of 'event'
   is_snes9x = true
   memory.usememorydomain = function()
@@ -454,15 +365,14 @@ local function draw_sprites()
     gui.text(0, 0, "number of sprites : "..#sprites)
     for i, sprite in pairs(sprites) do
         if show_sprite_data then
-            gui.text(0, 50 + i * 24, string.format("%d|%X - stype : %04X/%04X - pos[% 4d, % 4d] - HP: %02d - Tile Pos[% 2d, % 2d]", --| U1:%04X U2:%04X U3:%04X U4:%04X U5:%04X U6:%04X U7:%04X U8:%04X U9:%04X", i, 
-                     i, sprite['index'], sprite['stype'], sprite['rom_ptr'], sprite['pos_x'], sprite['pos_y'], sprite['hp'], sprite['x_tile'], sprite['y_tile']))
-                        --sprite['unknown1'], sprite['unknown2'], sprite['unknown3'], sprite['unknown4'],
-                        --sprite['unknown5'], sprite['unknown6'], sprite['unknown7'], sprite['unknown8'], sprite['unknown9'] ))
+            gui.text(0, 50 + i * 30, string.format("%d|%X - stype : %04X/%04X - pos[% 4d, % 4d] - HP: %02d", 
+                     i, sprite['index'], sprite['stype'], sprite['rom_ptr'], sprite['pos_x'], sprite['pos_y'], sprite['hp']))
+                        
             local tmpstr = ""
-            for j = 40, 51 do
+            for j = 33, 40 do
                 tmpstr = tmpstr .. string.format("|%d:%04X", j, sprite['unknow'][j])
             end
-            gui.text(0, 50 + (i * 2 + 1) * 12, tmpstr)
+            gui.text(0, 50 + (i * 2 + 1) * 15, tmpstr)
         end
         gameDrawBox(sprite['pos_x'] - 8*fontw , sprite['pos_y'] - 8*fonth, sprite['pos_x'] + 8 , sprite['pos_y'] + 8, 0xFFFFFFFF, 0x7777FFFF)
         gameDrawText(sprite['pos_x'] - 8*fontw, sprite['pos_y'] - 4*fonth, sprite['name'])
