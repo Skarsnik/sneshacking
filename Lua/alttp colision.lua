@@ -617,7 +617,7 @@ function draw_bombs()
 				x_low = x_low - 0x18
 				local x = bit.bor(x_low, bit.lshift(x_high, 8))
 				local y = bit.bor(y_low, bit.lshift(y_high, 8))
-				gameDrawBox(x, y, x + 0x30, y + 0x30, 0x88FFFFFF, 0x44FFFFFF)
+				gameDrawBox(x, y, x + 0x30, y + 0x30, 0x88FF66FF, 0x44FF66FF)
 			end
 
 		end
@@ -676,7 +676,6 @@ if is_snes9x then
 else
   while true do
     my_draw()
-	--prev_input = input.get()
     emu.frameadvance()
   end
 end
