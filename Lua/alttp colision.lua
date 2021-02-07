@@ -75,16 +75,18 @@ function DrawNiceText(text_x, text_y, str, color)
   if is_snes9x then 
     gui.text(text_x, text_y, str, color)
   else
-    local calc_x = client.transformPointX(text_x)
-    local calc_y = client.transformPointY(text_y)
-    gui.text(calc_x, calc_y, str, color)
+    local transformed = client.transformPoint(text_x, text_y)
+    gui.text(transformed["x"], transformed["y"], str, color)
   end
 end
 
 -- End of Bizhawk compatibility layer
 -----------------------------------------------			
-
 			
+local log = function(fmt, ...)
+    console.writeline(string.format(fmt, ...))
+end
+
 local hex4 = function(number)
   return string.format("%04X", number)
 end
@@ -444,7 +446,11 @@ local function to_hex(num)
 end
 
 local function gameDrawBox(x1, y1, x2, y2, color1, color2)
-  gui.drawBox(x1 - camera_x, y1 - camera_y, x2 - camera_x, y2 - camera_y, color1, color2)
+  local lx1 = bit.band(x1 - camera_x, 0xFF)
+  local ly1 = bit.band(y1 - camera_y, 0xFF)
+  local lx2 = bit.band(x2 - camera_x, 0xFF)
+  local ly2 = bit.band(y2 - camera_y, 0xFF)
+  gui.drawBox(lx1, ly1, lx2, ly2, color1, color2)
 end
 
 local function load_sprite(i)
@@ -542,7 +548,6 @@ end
 local function iterate_sprites()
     local pos = 0
     local sprites = load_all_sprites()
-    --console.writeline('--')
     for i, sprite in pairs(sprites) do
         if sprite['active'] then
             draw_sprite(pos, sprite)
@@ -581,13 +586,41 @@ end
 
 
 function draw_link_hitbox()  
-  local dir = mainmemory.read_u8(0x2F)
-  local stuff = 0 --bit.rshift(dir, 3) + mainmemory.read_u8(0x3C) + 1
-  local size_w = 0x0--memory.readbyte(0xF4AE + stuff)
-  local size_h = memory.readbyte(0xF530 + stuff)
-  --console.writeline(size_w..size_h)
-  gameDrawBox(link_x, link_y, link_x + size_w, link_y + size_h, 0xFF00FF00, 0x8800FF00) 
+    gameDrawBox(link_x, link_y, link_x + 16, link_y + 23, 0x8800FF00, 0x4400FF00) 
 end
+
+function draw_bombs()
+	BOMB_ID = 0x07
+
+	for ancilla_idx=0,9 do
+		local id = mainmemory.read_u8(0x0C4A + ancilla_idx)
+		if id == BOMB_ID then
+			-- these don't seem to be that relevant?
+			-- local timer = mainmemory.read_u8(0xEF0 + ancilla_idx)
+			-- local ignore_all = mainmemory.read_u8(0x0BA0 + ancilla_idx)
+			local something_counting_up = mainmemory.read_u8(0x0C5E + ancilla_idx)
+			if something_counting_up > 0 and something_counting_up < 0x0B then
+				-- empirically, this rolls from 1 to 0x0B during the bombs active hitbox frames. not sure exactly what it's counting.
+
+				local x_low = mainmemory.read_u8(0x0C04 + ancilla_idx)
+				local x_high = mainmemory.read_u8(0x0C18 + ancilla_idx)
+				local y_low = mainmemory.read_u8(0x0BFA + ancilla_idx)
+				local y_high = mainmemory.read_u8(0x0C0E + ancilla_idx)
+				local altitude = mainmemory.read_u8(0x029E + ancilla_idx)
+				-- this probably has overflow issues that i don't fully understand
+				y_low = y_low - 0x18 - altitude
+				x_low = x_low - 0x18
+				local x = bit.bor(x_low, bit.lshift(x_high, 8))
+				local y = bit.bor(y_low, bit.lshift(y_high, 8))
+				gameDrawBox(x, y, x + 0x30, y + 0x30, 0x88FF66FF, 0x44FF66FF)
+			end
+
+		end
+
+	end
+
+end
+
 
 memory.usememorydomain("System Bus")
 
@@ -600,14 +633,8 @@ function my_draw()
  -- $061C[0x02] -   X coordinate of the lower bounds of scrolling.
  -- $061E[0x02] -   X coordinate of the upper bounds of scrolling.
  
- camera_x_u = mainmemory.read_s16_le(0x061E)
- camera_y_u = mainmemory.read_s16_le(0x061A)
- camera_x_l = mainmemory.read_s16_le(0x061C)
- camera_y_l = mainmemory.read_s16_le(0x0618)
  link_x = mainmemory.read_s16_le(0x22)
  link_y = mainmemory.read_s16_le(0x20)
- camera_x = camera_x_u
- camera_y = camera_y_u
  --previous value for camera are bogus/weird
  camera_x = mainmemory.read_s16_le(0x11E)
  camera_y = mainmemory.read_s16_le(0x122)
@@ -624,7 +651,6 @@ function my_draw()
  rng1a = memory.read_u8(0x1a)
  
  gui.drawPixel(link_x - camera_x, link_y - camera_y, 0xFF00FF00)
- --console.writeline(string.format("XU : %d ; XL : %d -- YU : %d ; YL : %d", camera_x_u, camera_x_l, camera_y_u, camera_y_l))
  DrawNiceText(180, 150, "X : "..link_x)
  DrawNiceText(180, 160, "Y : "..link_y)
  DrawNiceText(180, 180, "XSpeed : "..xspeed)
@@ -637,6 +663,7 @@ function my_draw()
    draw_spin_attack_hitbox()
  end
  draw_link_hitbox()
+ draw_bombs()
 end
 
 if is_snes9x then
@@ -644,7 +671,6 @@ if is_snes9x then
 else
   while true do
     my_draw()
-	--prev_input = input.get()
     emu.frameadvance()
   end
 end
