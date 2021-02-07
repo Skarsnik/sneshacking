@@ -586,12 +586,7 @@ end
 
 
 function draw_link_hitbox()  
-  local dir = mainmemory.read_u8(0x2F)
-  local stuff = 0 --bit.rshift(dir, 3) + mainmemory.read_u8(0x3C) + 1
-  local size_w = 0x0--memory.readbyte(0xF4AE + stuff)
-  local size_h = memory.readbyte(0xF530 + stuff)
-  --console.writeline(size_w..size_h)
-  gameDrawBox(link_x, link_y, link_x + size_w, link_y + size_h, 0xFF00FF00, 0x8800FF00) 
+    gameDrawBox(link_x, link_y, link_x + 16, link_y + 23, 0x8800FF00, 0x4400FF00) 
 end
 
 function draw_bombs()
