@@ -1,4 +1,4 @@
-#include "snesstruc.h"
+#include "snesstruct.h"
 
 SNESStruc::SNESStruc()
 {
