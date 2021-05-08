@@ -566,14 +566,6 @@ end
      --!pos2_high = $0A - YB2/YB2
 
 	 
--- Bank6 #6050 Kinda wrong? the game do weird stuff with the second byte to give to the hitbox detection routine
-function draw_spin_attack_hitbox()
-  local left_x = link_x - 0x0E
-  local right_x = left_x + 0x2C
-  local top_y = link_y - 0x0A
-  local bot_y = top_y + 0x2D
-  gameDrawBox(left_x, top_y, right_x, bot_y, 0xFFFFFFFF, 0x88FFFFFF)
-end
 
 -- Bank6 #6065
 function draw_dash_hitbox()
@@ -588,6 +580,126 @@ end
 function draw_link_hitbox()  
     gameDrawBox(link_x, link_y, link_x + 16, link_y + 23, 0x8800FF00, 0x4400FF00) 
 end
+
+
+local function draw_action_hitbox()
+    -- from compendium, on $0301:
+    --     When non zero, Link has something in his hand, poised to strike. (Ice Rod, Hammer) Bit 6 being set indicates that magic powder is being sprinkled
+    local _0301 = memory.read_u8(0x0301)
+    -- x box, y box (starting corner of the box)
+    local xb = 0
+    local yb = 0
+
+    local nobox = false
+    local donebox = false
+    -- $2F is link direction - 0:U, 2:D, 4:L, 6:R
+    local direction  = 0
+    local tmp = 0
+    local Y  = 0
+    local X  = 0
+    local hh = 0
+    local ww = 0
+
+    -- Z3C: Flag indicating whether Link will bounce off if he touches a wall.
+    --   perhaps a proxy for 'is dashing' ?
+    local _0372 = memory.read_u8(0x0372)
+    
+    if _0372 ~= 0 then -- dashing (buggy)
+        -- this does not draw the hitbox in the correct place :\
+        -- i can't figure it out, sorry i'm giving up
+	    -- _0372 == 1 appears to match dashing-with-sword-out state.
+        direction = memory.read_u8(0x2F)
+        index = bit.rshift(direction, 1)
+        -- Y = (direction-(direction%2))/2
+        --xb = link_x + mainmemory.read_s16_le(0xF58E + index)
+        --yb = link_y + mainmemory.read_s16_le(0xF596 + index) - 0X0A
+
+        x_offset_l = memory.read_u8(0x06F58E + Y, "System Bus")
+        x_offset_h = memory.read_u8(0x06F592 + Y, "System Bus")
+        y_offset_l = memory.read_u8(0x06F596 + Y, "System Bus")
+        y_offset_h = memory.read_u8(0x06F58C + Y, "System Bus")
+
+        x_offset = bit.lshift(x_offset_h, 8) + x_offset_l
+        y_offset = bit.lshift(y_offset_h, 8) + y_offset_l
+        xb = link_x + x_offset
+        yb = link_y + y_offset
+
+        hh = 0x10
+        ww = 0x10
+    else
+        -- most likely relevant piece of Z3C on 0x3C: 
+        --   Lower Nibble: How many frames the B button has been held, approximately.
+        --   Upper nibble set to 9 on spin attack release.
+        -- so Y is, roughly, how long we've been holding sword out.
+        --     NOTE: Y <= 9 apparently forever
+        Y = memory.read_u8(0x3C)
+        -- N.B. about 0x037a:
+        --     ??? related to picking up bombs (see Bank 07)
+        --         (bank 07 search does not reveal anything useful)
+
+        -- What are we checking $0301 against here?
+        --     0x02 - hammer, it looks like (Z3C: AND #$0002 ; check if hammer is used )
+        --     next branch says:
+        --         AND #$0027 ; check if sword is used 
+        --     0027 == 0b100111
+        --
+        --     0x08 == 0b001000
+        --     0x0A == 0b001010
+        --     0x10 == 0b010000
+        --  $0x037A is related to bombs or shovel (?)
+        if _0301 == 0x02 or _0301 == 0x08 or _0301 == 0x0A or memory.read_u8(0x037A) == 0x10 then
+	        -- if any of this (hammer, or... other stuff), we don't care how long we've been holding B
+            Y = 0x00
+        elseif Y > 127 then -- spin hitbox active
+            -- 127 == 0x7F
+            xb = link_x-0xE
+            yb = link_y-0XA
+            hh = 0x2C
+            ww = 0x2C
+            donebox = true
+        elseif Y < 128 then
+            -- not a special case (hammer or ice rod or whatever....?), not spinning
+            -- i.e. slashing or not doing anything [or maybe other states too?]
+            tmp = memory.read_u8(0x06F577 + Y, "System Bus")
+            if tmp ~= 0 then
+                -- this occurs when we're standing still,
+                -- and while we're slashing but without a hitbox
+                nobox = true
+            else
+                -- sword hitbox active (this branch is reached during active slash frames & during
+                -- poke hitbox frames)
+                direction = memory.read_u8(0x2F)
+
+                -- This % should be useless; direction is <= 8
+                -- can it get a weird/bad value somehow I'm not aware of?
+                direction = (direction*8) % 256
+                X = direction + Y + 1
+            end
+        end
+        if not nobox and not donebox then -- slashing or poking
+            -- N.B. does this catch anything other than slash/poke?
+            --
+            local sword_offset_x = memory.read_u8(0x45)
+            sword_offset_x = sword_offset_x + memory.read_u8(0x06F473 + X, "System Bus")
+            sword_offset_x = sword_offset_x % 256
+
+            xb = link_x + sword_offset_x
+
+            local sword_offset_y = memory.read_u8(0x44)
+            sword_offset_y = sword_offset_y + memory.read_u8(0x06F4F5 + X, "System Bus")
+            sword_offset_y = sword_offset_y % 256
+
+            yb = link_y + sword_offset_y
+
+            ww = memory.read_u8(0x06F4B4 + X, "System Bus")
+            hh = memory.read_u8(0x06F536 + X, "System Bus")
+        end
+    end
+
+    gameDrawBox(xb, yb, xb+ww, yb+hh, 0xCCFFCCCC, 0x77FFCCCC)
+end
+
+
 
 function draw_bombs()
 	BOMB_ID = 0x07
@@ -650,19 +762,20 @@ function my_draw()
  rng213c = memory.read_u8(0x213c)
  rng1a = memory.read_u8(0x1a)
  
- gui.drawPixel(link_x - camera_x, link_y - camera_y, 0xFF00FF00)
- DrawNiceText(180, 150, "X : "..link_x)
- DrawNiceText(180, 160, "Y : "..link_y)
- DrawNiceText(180, 180, "XSpeed : "..xspeed)
- DrawNiceText(180, 190, "YSpeed : "..yspeed)
- DrawNiceText(80, 190, string.format("OLDRNG  %d  : %d", lastrngchange, oldrng))
- DrawNiceText(80, 195, string.format(" RNG : %d,  -  213c: %x,  1a : %x", rng, rng213c, rng1a))
- DrawNiceText(100, 200, string.format("1: %x - 11: %x - 111: %x", bit.band(rng, 1), bit.band(rng, 3), bit.band(rng, 7)))
+ -- draw a pixel at links coords:
+ --   gui.drawPixel(link_x - camera_x, link_y - camera_y, 0xFF00FF00)
+ --
+ -- DrawNiceText(180, 150, "X : "..link_x)
+ -- DrawNiceText(180, 160, "Y : "..link_y)
+ -- DrawNiceText(180, 180, "XSpeed : "..xspeed)
+ -- DrawNiceText(180, 190, "YSpeed : "..yspeed)
+ -- DrawNiceText(80, 190, string.format("OLDRNG  %d  : %d", lastrngchange, oldrng))
+ -- DrawNiceText(80, 195, string.format(" RNG : %d,  -  213c: %x,  1a : %x", rng, rng213c, rng1a))
+ -- DrawNiceText(100, 200, string.format("1: %x - 11: %x - 111: %x", bit.band(rng, 1), bit.band(rng, 3), bit.band(rng, 7)))
+
  iterate_sprites()
- if mainmemory.read_s8(0x3c) < 0 then
-   draw_spin_attack_hitbox()
- end
- draw_link_hitbox()
+ -- draw_link_hitbox()
+ draw_action_hitbox()
  draw_bombs()
 end
 
