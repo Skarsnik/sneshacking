@@ -101,116 +101,116 @@ org $1BB1E0
 
 ; This change input according to the table of change
 change_input:
-    PHP
-    %i16()
-    %a8()
-	LDA $00 : STA $8E
-	LDA $01 : STA $8F
-	%a16()
-	LDA $8E
-	PHB : PHK : PLB
-	BEQ .end ; if input is 0 do nothing
-	LDX #$0000
-	STZ !CPY_INPUT
-	.loop
-	  LDA $8E
-	  LDY.w table_input_bitmask, X ; debug stuff
-	  SEP #$02
-	  BIT.w table_input_bitmask, X : BEQ .endif
-        LDA !TABLE_ICHANGE, X
-		ADC !TABLE_ICHANGE, X
-		TAY
-		LDA table_input_bitmask, Y
-	    ORA !CPY_INPUT
-		STA !CPY_INPUT
-      .endif
-      INX
-	  INX
-	  CPX #$0018 : BNE .loop
-	.afterloop
-	  ; let's prevent up + down and left + right
-	  LDA !CPY_INPUT
-	  AND #$0C00 : CMP #$0C00 : BEQ .del_ud
-	  LDA !CPY_INPUT
-	  AND #$0300 : CMP #$0300 : BEQ .del_lr
-	  JMP .hello
-	  .del_ud
-	    EOR #$0400
-	    JMP .ch_i
-	  .del_lr
-	    EOR #$0100
-	  .ch_i
-	    STA !CPY_INPUT
-	  .hello
-	  %a8()
-	  LDX #$0001
-	  LDA !CPY_INPUT
-	  STA $00
-	  LDA !CPY_INPUT, X
-	  STA $01
-	.end
-	PLB
-	PLP
-	%a8()
-	%i8()
-    RTL
+  PHP
+  %i16()
+  %a8()
+  LDA $00 : STA $8E
+  LDA $01 : STA $8F
+  %a16()
+  LDA $8E
+  PHB : PHK : PLB
+  BEQ .end ; if input is 0 do nothing
+  LDX #$0000
+  STZ !CPY_INPUT
+  .loop
+    LDA $8E
+    LDY.w table_input_bitmask, X ; debug stuff
+    SEP #$02
+    BIT.w table_input_bitmask, X : BEQ .endif
+      LDA !TABLE_ICHANGE, X
+      ADC !TABLE_ICHANGE, X
+      TAY
+      LDA table_input_bitmask, Y
+      ORA !CPY_INPUT
+      STA !CPY_INPUT
+    .endif
+    INX
+    INX
+    CPX #$0018 : BNE .loop
+  .afterloop
+  ; let's prevent up + down and left + right
+  LDA !CPY_INPUT
+  AND #$0C00 : CMP #$0C00 : BEQ .del_ud
+  LDA !CPY_INPUT
+  AND #$0300 : CMP #$0300 : BEQ .del_lr
+  JMP .hello
+  .del_ud
+    EOR #$0400
+    JMP .ch_i
+  .del_lr
+    EOR #$0100
+  .ch_i
+    STA !CPY_INPUT
+  .hello
+  %a8()
+  LDX #$0001
+  LDA !CPY_INPUT
+  STA $00
+  LDA !CPY_INPUT, X
+  STA $01
+  .end
+  PLB
+  PLP
+  %a8()
+  %i8()
+  RTL
 
 ; ==== GAME HOOK ===
 gamemode_hook:
-   PHP
-   %i16()
-   %a16()
-   LDA #$0000
-   CMP !TAB_INIT : BEQ .init_table
-   JMP .normal
-   .init_table
-     STZ !ROOM_COUNTER
-     LDA #$0000
-	 STA $82
-     LDX #$0000
-	 LDY #$0000
-	 .loop
-	   TXA
-	   STA !TABLE_ICHANGE, Y
-	   INX
-	   INY
-	   INY
-	   CPX #$000C : BNE .loop
-	 LDA #$0001
-	 STA !TAB_INIT
-   .normal
-	JSR transition_detection
-	JSR input_display
-    JMP end_of_gamemode_hook
+  PHP
+  %i16()
+  %a16()
+  LDA #$0000
+  CMP !TAB_INIT : BEQ .init_table
+  JMP .normal
+  .init_table
+    STZ !ROOM_COUNTER
+    LDA #$0000
+    STA $82
+    LDX #$0000
+    LDY #$0000
+    .loop
+    TXA
+    STA !TABLE_ICHANGE, Y
+    INX
+    INY
+    INY
+    CPX #$000C : BNE .loop
+  LDA #$0001
+  STA !TAB_INIT
+  .normal
+  JSR transition_detection
+  JSR input_display
+  JMP end_of_gamemode_hook
 
 end_of_gamemode_hook:
-    PLP
-    JSL $0080B5 ; GameModes
-    RTL
+  PLP
+  JSL $0080B5 ; GameModes
+  RTL
 
 shuffle_dpad:
-    LDA #$0006
-	STA $00
-	LDA #$0009
-	STA $02
-	JSR shuffle_table_input
-	RTS
+  LDA #$0006
+  STA $00
+  LDA #$0009
+  STA $02
+  JSR shuffle_table_input
+  RTS
 
 shuffle_button_noSS:
-    LDA #$0000
-    STA $00
-	LDA #$0005
-	STA $02
-	JSR shuffle_table_input
-	RTS
+  LDA #$0000
+  STA $00
+  LDA #$0005
+  STA $02
+  JSR shuffle_table_input
+  RTS
 
 shuffle_all_noSS:
-   LDA #$0000
-   STA $00
-   LDA #$0009
-   STA $02
-   JSR shuffle_table_input
-   RTS
+  LDA #$0000
+  STA $00
+  LDA #$0009
+  STA $02
+  JSR shuffle_table_input
+  RTS
 
 ; index are wrong here   
 
@@ -231,40 +231,40 @@ shuffle_table_input:
   .loop
     STX $06
     LDA $0FA0 ; RNG value
-	ADC $1A
-	; modulo
-	STA $4204
-	; (original calc should be range - (top - pos) but let avoid neg)
-	LDA !TAB_STOP
-	CLC
-	SBC $06
-	STA $08
-	LDA !RANGE_SIZE
-	CLC
-	SBC $08
-	;LDA !RANGE_SIZE = OLD code with neg, meh
-	;SBC !TAB_STOP
-	; ADC $06
-	%a8()
-	STA $4206 ; need to wait 8 cycles for the register to do its work
-	%a16()
-	NOP : NOP : NOP
-	LDA $4216
-	ADC $00
-	STA $06 : ADC $06 : TAY; double this shit for index
-	TXA : STA $06 :	ADC $06 : PHX : TAX ; double X
-	LDA !TABLE_ICHANGE, X
-	STA $06
-	LDA !TABLE_ICHANGE, Y
-	STA !TABLE_ICHANGE, X
-	LDA $06
-	STA !TABLE_ICHANGE, Y
-	PLX
-	DEX
-	LDA $00
-	DEA
-	STA $06
-    CPX $06 : BNE .loop
+  ADC $1A
+  ; modulo
+  STA $4204
+  ; (original calc should be range - (top - pos) but let avoid neg)
+  LDA !TAB_STOP
+  CLC
+  SBC $06
+  STA $08
+  LDA !RANGE_SIZE
+  CLC
+  SBC $08
+  ;LDA !RANGE_SIZE = OLD code with neg, meh
+  ;SBC !TAB_STOP
+  ; ADC $06
+  %a8()
+  STA $4206 ; need to wait 8 cycles for the register to do its work
+  %a16()
+  NOP : NOP : NOP
+  LDA $4216
+  ADC $00
+  STA $06 : ADC $06 : TAY; double this shit for index
+  TXA : STA $06 :	ADC $06 : PHX : TAX ; double X
+  LDA !TABLE_ICHANGE, X
+  STA $06
+  LDA !TABLE_ICHANGE, Y
+  STA !TABLE_ICHANGE, X
+  LDA $06
+  STA !TABLE_ICHANGE, Y
+  PLX
+  DEX
+  LDA $00
+  DEA
+  STA $06
+  CPX $06 : BNE .loop
   RTS
 
 
@@ -276,13 +276,12 @@ table_input_bitmask:
   
 ;; From helg practice romhack  
 transition_detection:
-    ; Transition detection {{{
+  ; Transition detection {{{
 
-    %ai8()
-    LDA $10 : CMP $82 : BNE .gamemode_changed
-    LDA $11 : CMP $83 : BNE .submode_changed
-
-    RTS
+  %ai8()
+  LDA $10 : CMP $82 : BNE .gamemode_changed
+  LDA $11 : CMP $83 : BNE .submode_changed
+  RTS
 
   .gamemode_changed
     LDA $82
@@ -315,10 +314,10 @@ transition_detection:
   .gamemode_dungeon
     LDA $10
 
-    ; Dungeon -> Overworld
+  ; Dungeon -> Overworld
     CMP #$0F : BEQ .shuffle_input
 
-    ; Caught by Wall Master
+  ; Caught by Wall Master
     CMP #$11 : BEQ .shuffle_input
 
     JMP .end
@@ -395,34 +394,34 @@ transition_detection:
     JMP .end
   ; This is for shuffling input only every 3 normal transitions
   .shuffle_input
-     STZ !ROOM_COUNTER
-     ; difficulty are choosen from the file slot, it start at 02
-     LDA $701FFE
-	 CMP #$02 : BEQ .baby_shuffle
-	 CMP #$04 : BEQ .normal_shuffle
-	 CMP #$06 : BEQ .hard_shuffle
-	 JMP .end 
-	 .baby_shuffle
-	    %ai16()
-	    JSR shuffle_button_noSS
-	    JMP .end
-	 .normal_shuffle
-	    %ai16()
-	    JSR shuffle_dpad
-	    JSR shuffle_button_noSS
-		JMP .end
-	 .hard_shuffle
-       	%ai16()
-		JSR shuffle_all_noSS
-	    JMP .end
+    STZ !ROOM_COUNTER
+    ; difficulty are choosen from the file slot, it start at 02
+    LDA $701FFE
+    CMP #$02 : BEQ .baby_shuffle
+    CMP #$04 : BEQ .normal_shuffle
+    CMP #$06 : BEQ .hard_shuffle
+    JMP .end 
+    .baby_shuffle
+      %ai16()
+      JSR shuffle_button_noSS
+      JMP .end
+    .normal_shuffle
+      %ai16()
+      JSR shuffle_dpad
+      JSR shuffle_button_noSS
+    	JMP .end
+    .hard_shuffle
+      %ai16()
+  	  JSR shuffle_all_noSS
+      JMP .end
   .room_or_map_changed
-     LDA !ROOM_COUNTER
-	 INA
-	 STA !ROOM_COUNTER
-	 CMP #$03 : BNE .end
-	 STZ !ROOM_COUNTER
-	 JMP .shuffle_input
-  .end
+    LDA !ROOM_COUNTER
+	  INA
+    STA !ROOM_COUNTER
+    CMP #$03 : BNE .end
+    STZ !ROOM_COUNTER
+    JMP .shuffle_input
+    .end
     %a8()
     ; Persist new game mode/submode.
     LDA $10 : STA $82

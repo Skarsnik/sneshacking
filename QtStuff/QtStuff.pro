@@ -4,6 +4,8 @@
 #
 #-------------------------------------------------
 
+include(QHexView/QHexView.pri)
+
 QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -26,13 +28,20 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        romviewer.cpp
+        romviewer.cpp \
+        rom.cpp \
+        ../src/rominfo.c \
+    snesstruc.cpp
 
 HEADERS += \
-        romviewer.h
+        romviewer.h \
+    rom.h \
+    snesstruct.h
 
 FORMS += \
         romviewer.ui
+
+INCLUDEPATH += $$PWD/../src
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
