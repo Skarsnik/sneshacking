@@ -65,10 +65,10 @@ function function_sprite()
 -- 0x0F85 tab seems to start here, then the game check for every $20 pos for a new thing
 -- 0 is used to read C5A9A1-A4 
 -- if 1 is 05 it probably skip the thing. 10E5 is the end?
-
 -- type 5 dmg donald
 -- type 6 can be dmg
 -- type 2 taken dmg, invul?
+-- 2 is invul timer ?
 -- 3 is one byte
 -- 5 is 2 bytes
 -- 6 is HP
@@ -77,26 +77,46 @@ function function_sprite()
 
 -- 16 hp initial?
 
+-- hit box info
+--C5A94F $B9 $00 $00     LDA $0000,Y [000F85] = $0582    A:0082 X:0D35 Y:0F85 S:0185 D:0000 DB:00 P:nvmxdizC V:29  H:251 FC:38587
+--C5A952 $29 $FF $00     AND #$00FF                      A:0582 X:0D35 Y:0F85 S:0185 D:0000 DB:00 P:nvmxdizC V:29  H:261 FC:38587
+--C5A955 $0A             ASL                             A:0082 X:0D35 Y:0F85 S:0185 D:0000 DB:00 P:nvmxdizC V:29  H:266 FC:38587
+--C5A956 $0A             ASL                             A:0104 X:0D35 Y:0F85 S:0185 D:0000 DB:00 P:nvmxdizc V:29  H:269 FC:38587
+--C5A957 $AA             TAX                             A:0208 X:0D35 Y:0F85 S:0185 D:0000 DB:00 P:nvmxdizc V:29  H:272 FC:38587
+--C5A958 $E2 $20         SEP #$20                        A:0208 X:0208 Y:0F85 S:0185 D:0000 DB:00 P:nvmxdizc V:29  H:275 FC:38587
+--C5A95A $BF $A1 $A9 $C5 LDA $C5A9A1,X [C5ABA9] = $50   
+
   memory.usememorydomain("System Bus")
   for i = 0, 10 do
     local offset = i * 0x20 + 0xF85
     local type = memory.read_u8(offset + 1)
+    local timer1 = memory.read_u8(offset + 2)
     local x = memory.read_s16_le(offset + 0xE)
     local y = memory.read_s16_le(offset + 0xB)
     local hp = memory.read_u8(offset + 6)
     local b0 = memory.read_u8(offset)
     local w5 = memory.read_s16_le(offset + 5)
-    local timer1 = memory.read_u8(offset + 0x14)
-    if type > 255 then
+    local timer2 = memory.read_u8(offset + 0x14)
+    local offsetx = memory.read_u16_le(0xC5A9A1 + b0)
+    local offsety = memory.read_u16_le(0xC5A9A3 + b0)
+
+
+    b0 = bit.lshift(b0, 2)
+    if type > 0 then
         gui.drawBox(x - 16 - camera_x, y - camera_y, x + 16 - camera_x, y - 32 - camera_y, 0xFFFFFFFF, 0x7777FFFF)
-        DrawNiceText(x + 16 - camera_x + 2, y - 32 - camera_y, string.format("Type : %02X", type))
-        DrawNiceText(x + 16 - camera_x + 2, y - 32 - camera_y + 8, string.format("HP : %02d", hp))
-        DrawNiceText(x + 16 - camera_x + 2, y - 32 - camera_y + 16, string.format("%02d - %02d - %02d - %02d", memory.read_u8(0xC5A9A1 + b0), memory.read_u8(0xC5A9A2 + b0), memory.read_s8(0xC5A9A3 + b0), memory.read_u8(0xC5A9A4 + b0)))
-        DrawNiceText(x + 16 - camera_x + 2, y - 32 - camera_y + 24, string.format("T : %d", timer1))
-        
+        DrawNiceText(x + 16 - camera_x + 2, y - 32 - camera_y, string.format("Type:%02X", type))
+        DrawNiceText(x + 16 - camera_x + 2, y - 32 - camera_y + 8, string.format("HP:%02d", hp))
+        DrawNiceText(x + 16 - camera_x + 2, y - 32 - camera_y + 16, string.format("%02d - %02d - %02d - %02d", memory.read_s8(0xC5A9A1 + b0), memory.read_s8(0xC5A9A2 + b0), memory.read_s8(0xC5A9A3 + b0), memory.read_s8(0xC5A9A4 + b0)))
+        DrawNiceText(x + 16 - camera_x + 2, y - 32 - camera_y + 24, string.format("T:%d,%d", timer1, timer2))
+        --console.write(string.format("%X - %X ; %d - %d\n", offsetx, offsety, offsetx, offsety))
     end
   end
 
+  --for j = 0, 4 do
+  --  for i = 0,0x20 do1
+  --    DrawNiceText(20 + j * 30, 20 + 5 * i, string.format("%02X : %02X", i, memory.read_u8(0x0F85 + j * 0x20 + i)))
+  --  end
+  --end
 end
 
 
@@ -113,22 +133,19 @@ function my_draw()
     local hitbox_x2 = donald_x + 16 - camera_x
     local hitbox_y1 = donald_y - camera_y
     local hitbox_y2 = donald_y - 32 - camera_y
-    --gui.drawBox(hitbox_x1, hitbox_y1, hitbox_x2, hitbox_y2, 0xFFFFFFFF, 0x7777FFFF)
-    --DrawNiceText(hitbox_x2 + 2, hitbox_y2, string.format("x:%04d,y:%04d", donald_x, donald_y))
-    --DrawNiceText(hitbox_x2 + 2, hitbox_y2 + 8, string.format("HSpeed: %01d", speed))
-    --DrawNiceText(hitbox_x2 + 2, hitbox_y2 + 16, string.format("CHSpeed: %01d", donald_x - old_donald_x))
-    --DrawNiceText(hitbox_x2 + 2, hitbox_y2 + 24, string.format("CVpeed: %01d", donald_y - old_donald_y))
+    gui.drawBox(hitbox_x1, hitbox_y1, hitbox_x2, hitbox_y2, 0xFFFFFFFF, 0x7777FFFF)
+    DrawNiceText(hitbox_x2 + 2, hitbox_y2, string.format("x:%04d,y:%04d", donald_x, donald_y))
+    DrawNiceText(hitbox_x2 + 2, hitbox_y2 + 8, string.format("HSpeed: %01d", speed))
+    DrawNiceText(hitbox_x2 + 2, hitbox_y2 + 16, string.format("CHSpeed: %01d", donald_x - old_donald_x))
+    DrawNiceText(hitbox_x2 + 2, hitbox_y2 + 24, string.format("CVpeed: %01d", donald_y - old_donald_y))
     old_donald_x = donald_x
     old_donald_y = donald_y
 
+    DrawNiceText(200, 0, string.format("Lag count : %d", emu.lagcount()))
 
 
     -- 3 is likely invu timer
-    for j = 0, 4 do
-      for i = 0,0x20 do
-        DrawNiceText(20 + j * 30, 20 + 5 * i, string.format("%02X : %02X", i, memory.read_u8(0x0F85 + j * 0x20 + i)))
-      end
-    end
+
 
     for i = 0,4 do
       DrawNiceText(150 + i * 20, 200, string.format("%d , ", memory.read_u8(0x0E0D + i)))
