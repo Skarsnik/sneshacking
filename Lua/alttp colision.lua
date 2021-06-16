@@ -493,8 +493,8 @@ local function load_all_sprites()
 end
 
 local function show_sprite_info(pos, sprite)
-  local x = pos % 4
-   local y = math.floor(pos / 4) * (7 * 10)
+    local x = pos % 4
+    local y = math.floor(pos / 4) * (7 * 10)
     DrawNiceText(x * 64, y + 7 * 0, '#' .. to_hex(sprite['index']))
     DrawNiceText(x * 64, y + 7 * 1, sprite['name'])
     DrawNiceText(x * 64, y + 7 * 2, 'State: ' .. sprite['state_verbose'])
@@ -508,7 +508,7 @@ local function show_sprite_info(pos, sprite)
 end
 
 local function draw_sprite(pos, sprite)
-    show_sprite_info(pos, sprite)
+    -- show_sprite_info(pos, sprite)
     --console.writeline(string.format("Name : %s (S:0x%02X) - HitboxB:0x%02X - map position : %d,%d - screen position : %d,%d   --- low/hight %d, %d / %d, %d", sprite['name'], sprite['state'], sprite['hitbox'], 
 	--sprite['x'], sprite['y'],  sprite['x'] - camera_x, sprite['y'] - camera_y, sprite['x_low'], sprite['x_high'], sprite['y_low'], sprite['y_high']))
 	local s_color = 0x000000
@@ -538,11 +538,9 @@ local function draw_sprite(pos, sprite)
 	--console.writeline(string.format("-- Weird stuff %d, %d | %d, %d", x_low, x_high, y_low, y_high))
 	--console.writeline(string.format("--Weird pos : %d, %d -- shadow %d", modified_x, modified_y, memory.readbyte(0x0F70 + sprite['index'])))
 	
-	gameDrawBox(modified_x, modified_y, modified_x + size_w, modified_y + size_h, 0xFFFFFFFF, 0xBBFFFFFF)
-	gui.drawPixel(sprite['x'] - camera_x, sprite['y'] - camera_y, 0xFF00FF00)
-	gui.drawBox(sprite['x'] - camera_x, sprite['y'] - camera_y, sprite['x'] - camera_x + size_w, sprite['y'] - camera_y + size_h, bit.bor(0xFF000000, s_color), bit.bor(0x55000000, s_color))
-	DrawNiceText(sprite['x'] - camera_x + 16, sprite['y'] - camera_y + 5, sprite['name'], 0xFF00FF00)
-	DrawNiceText(sprite['x'] - camera_x + 16, sprite['y'] - camera_y, "#"..to_hex(sprite['index']), 0xFF00FF00)
+    gameDrawBox(modified_x, modified_y, modified_x + size_w, modified_y + size_h, bit.bor(0xFF000000, s_color), bit.bor(0x55000000, s_color))
+    DrawNiceText(sprite['x'] - camera_x + 16, sprite['y'] - camera_y + 5, sprite['name'], 0xFF00FF00)
+    DrawNiceText(sprite['x'] - camera_x + 16, sprite['y'] - camera_y, "#"..to_hex(sprite['index']), 0xFF00FF00)
 end
 
 local function iterate_sprites()
