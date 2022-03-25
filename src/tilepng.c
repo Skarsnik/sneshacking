@@ -2,6 +2,7 @@
 #include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "tilepng.h"
 
 char*	hexString(const char* str, const unsigned int size)
@@ -17,7 +18,7 @@ char*	hexString(const char* str, const unsigned int size)
     return toret;
 }
 
-void export_tile_to_png(tile8 rawtile, const palette pal, const char* filename)
+void export_tile_to_png(tile8 rawtile, const r_palette pal, const char* filename)
 {
   FILE *fp = fopen(filename, "wb");
   png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
