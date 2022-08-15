@@ -23,7 +23,11 @@ Copyright 2017 Sylvain "Skarsnik" Colinet
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
-#include <unistd.h>
+//#include <unistd.h>
+#define R_OK    4       /* Test for read permission.  */
+#define W_OK    2       /* Test for write permission.  */
+#define   X_OK    1       /* execute permission - unsupported in windows*/
+#define F_OK    0       /* Test for existence.  */
 
 #include <sys/stat.h>
 
@@ -70,9 +74,23 @@ $87000-$8B7FF - 3bpp graphics sets (uncompressed)
 
 // ROM_DATA[0x04F80 + 446 + i], ROM_DATA[0x04F80 + 223 + i], ROM_DATA[0x04F80 + i]
 
+/*static char* hexString(const char* str, const unsigned int size)
+{
+    char* toret = malloc(size * 3 + 1);
+
+    unsigned int i;
+    for (i = 0; i < size; i++)
+    {
+        sprintf(toret + i * 3, "%02X ", (unsigned char)str[i]);
+    }
+    toret[size * 3] = 0;
+    return toret;
+}*/
+
+
 void	build_gfx_table_pointers()
 {
-    FILE* rom_stream = my_fopen(rom_file, "r");
+    FILE* rom_stream = my_fopen(rom_file, "rb");
     unsigned char e_addr[3];
     for (unsigned int i = 0; i < NB_POINTER_IN_TABLE; i++)
     {
@@ -83,9 +101,6 @@ void	build_gfx_table_pointers()
         rom_fseek(rom_stream, POINTER_TABLE_START + 446 + i);
         fread(e_addr + 2, 1, 1, rom_stream);
 
-        /*char *hex_str = hexString((char*) e_addr, 3);
-        printf("Address read : %s\n", hex_str);
-        free(hex_str);*/
         gfx_table_pointers[i] = (e_addr[0] << 16) + (e_addr[1] << 8) + e_addr[2];
         char* mapping_error;
         int pc_addr = lorom_snes_to_pc(gfx_table_pointers[i], &mapping_error);
@@ -111,7 +126,7 @@ void	build_gfx_location()
             gfx_locations[i].bpp = 3;
             gfx_locations[i].compression = true;
             if (i != 0x70)
-                gfx_locations[i].max_length = gfx_table_pc_locations[i + 1] - gfx_locations[i].address;
+                gfx_locations[i].max_length = gfx_table_pc_locations[i + 1] - gfx_table_pc_locations[i];
             else
                 gfx_locations[i].max_length = gfx_locations[i - 1].max_length;
         }
@@ -194,7 +209,7 @@ void	extract_gfx(s_location* locations, bool single_file, const char* allfilenam
 {
     char read_buffer[1000000]; //~ 1M should be enought x)
     char filename[20];
-    FILE* rom_stream = my_fopen(rom_file, "r");
+    FILE* rom_stream = my_fopen(rom_file, "rb");
     FILE* gfx_file;
     unsigned int	compressed_length;
     unsigned int	decompressed_length;
@@ -215,8 +230,8 @@ void	extract_gfx(s_location* locations, bool single_file, const char* allfilenam
         location = locations[i];
         unsigned int pc_location = location.address;
 
-        //printf("==%02X==\n", i);
-        //print_location(location);
+        /*printf("==%02X==\n", i);
+        print_location(location);*/
         rom_fseek(rom_stream, pc_location);
         read_length = fread(read_buffer, 1, location.max_length, rom_stream);
         write_length = read_length;
@@ -321,8 +336,8 @@ void 	inject_gfx(s_location* locations, const char *inject_file, unsigned int i_
     unsigned int start = 0;
     unsigned int font_link_offset = 2048 * 2; // offset in the gfx file
 
-    FILE* gfx_file = my_fopen(inject_file, "r");
-    FILE* rom_stream = my_fopen(rom_file, "r+");
+    FILE* gfx_file = my_fopen(inject_file, "rb");
+    FILE* rom_stream = my_fopen(rom_file, "rb+");
     //std_nintendo_compression_sanity_check = true;
 
     if (locations == zcompress_gfx_locations)
@@ -436,7 +451,7 @@ void	create_pointer_table(unsigned int i_start, bool zmode, bool simulation)
     unsigned int snes_addr = lorom_pc_to_snes(pc_addr);
     if (zmode)
         start = 2;
-    FILE* rom_stream = my_fopen(rom_file, "r+");
+    FILE* rom_stream = my_fopen(rom_file, "rb+");
     for (unsigned int i = start; i < NB_POINTER_IN_TABLE; i++)
     {
         s_location location = gfx_locations_sorted[i];

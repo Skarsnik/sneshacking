@@ -57,6 +57,7 @@ FILE* my_fopen(const char *file, const char *mode)
 
 int rom_fseek(FILE* stream, long offset)
 {
+    //printf("rom seek : %08X, %08X\n", offset, offset + header_offset);
     return fseek(stream, offset + header_offset, SEEK_SET);
 }
 
