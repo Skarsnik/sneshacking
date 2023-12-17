@@ -33,13 +33,13 @@ if not event then
   memory.read_s16_le = memory.readwordsigned
   memory.read_u32_le = memory.readdword
   memory.read_s32_le = memory.readdwordsigned
-  memory.read_u16_be = function(addr) return bit.rshift(bit.bswap(memory.read_u16_le(addr)),16) end
-  mainmemory.read_u8 = function(addr) return memory.readbyte(bit.bor(0x7E0000, addr)) end
-  mainmemory.read_s8 = function(addr) return memory.readbytesigned(bit.bor(0x7E0000, addr)) end
-  mainmemory.read_u16_le = function(addr) return memory.readword(bit.bor(0x7E0000, addr)) end
-  mainmemory.read_s16_le = function(addr) return memory.readwordsigned(bit.bor(0x7E0000, addr)) end
-  mainmemory.read_u32_le = function(addr) return memory.readdword(bit.bor(0x7E0000, addr)) end
-  mainmemory.read_s32_le = function(addr) return memory.readdwordsigned(bit.bor(0x7E0000, addr)) end
+  memory.read_u16_be = function(addr) return bit.bswap(memory.read_u16_le(addr)) >> 16 end
+  mainmemory.read_u8 = function(addr) return memory.readbyte( 0x7E0000 | addr) end
+  mainmemory.read_s8 = function(addr) return memory.readbytesigned(0x7E0000 | addr) end
+  mainmemory.read_u16_le = function(addr) return memory.readword(0x7E0000 | addr) end
+  mainmemory.read_s16_le = function(addr) return memory.readwordsigned(0x7E0000 | addr) end
+  mainmemory.read_u32_le = function(addr) return memory.readdword(0x7E0000 | addr) end
+  mainmemory.read_s32_le = function(addr) return memory.readdwordsigned(0x7E0000 | addr) end
   local color_b2s = function(bizhawk_color)
     if bizhawk_color == nil then return nil end
     return bit.rol(bizhawk_color,8)
@@ -446,10 +446,10 @@ local function to_hex(num)
 end
 
 local function gameDrawBox(x1, y1, x2, y2, color1, color2)
-  local lx1 = bit.band(x1 - camera_x, 0xFF)
-  local ly1 = bit.band(y1 - camera_y, 0xFF)
-  local lx2 = bit.band(x2 - camera_x, 0xFF)
-  local ly2 = bit.band(y2 - camera_y, 0xFF)
+  local lx1 = x1 - camera_x & 0xFF
+  local ly1 = y1 - camera_y & 0xFF
+  local lx2 = x2 - camera_x & 0xFF
+  local ly2 = y2 - camera_y & 0xFF
   gui.drawBox(lx1, ly1, lx2, ly2, color1, color2)
 end
 
@@ -461,8 +461,8 @@ local function load_sprite(i)
         state = memory.readbyte(0x7E0DD0 + i),
         hp = memory.readbyte(0x7E0E50 + i),
         type = memory.readbyte(0x7E0E20 + i),
-        x = bit.bor(memory.readbyte(0x7E0D10 + i), bit.lshift(memory.readbyte(0x7E0D30 + i), 8)),
-        y = bit.bor(memory.readbyte(0x7E0D00 + i), bit.lshift(memory.readbyte(0x7E0D20 + i), 8)),
+        x = memory.readbyte(0x7E0D10 + i) | (memory.readbyte(0x7E0D30 + i) << 8),
+        y = memory.readbyte(0x7E0D00 + i) | (memory.readbyte(0x7E0D20 + i) << 8),
 		x_low = memory.readbyte(0x7E0D10 + i),
 		x_high = memory.readbyte(0x7E0D30 + i),
 		y_low = memory.readbyte(0x7E0D00 + i),
@@ -524,7 +524,7 @@ local function draw_sprite(pos, sprite)
 	if sprite['state'] == 0x08 then
 	  s_color = 0x00FF00
 	end
-	local hitbox_index = bit.band(sprite['hitbox'], 0x1F) + 1
+	local hitbox_index = (sprite['hitbox'] & 0x1F) + 1
 	--console.writeline(hitbox_index..table_size_hitbox1[hitbox_index])
 	local size_w = table_size_hitbox1[hitbox_index]
 	local size_h = table_size_hitbox2[hitbox_index]
@@ -532,15 +532,15 @@ local function draw_sprite(pos, sprite)
 	local x_high = sprite['x_high']-- + table_x_offsets_high[hitbox_index]
 	local y_low = sprite['y_low'] + table_y_offsets_low[hitbox_index] - memory.readbyte(0x0F70 + sprite['index'])
 	local y_high = sprite['y_high'] -- + table_y_offsets_high[hitbox_index]
-	local modified_x = bit.bor(x_low, bit.lshift(x_high, 8))
-	local modified_y = bit.bor(y_low, bit.lshift(y_high, 8))
+	local modified_x = x_low | (x_high << 8)
+	local modified_y = y_low | (y_high << 8)
 	
 	--console.writeline(string.format("-- Weird stuff %d, %d | %d, %d", x_low, x_high, y_low, y_high))
 	--console.writeline(string.format("--Weird pos : %d, %d -- shadow %d", modified_x, modified_y, memory.readbyte(0x0F70 + sprite['index'])))
 	
 	gameDrawBox(modified_x, modified_y, modified_x + size_w, modified_y + size_h, 0xFFFFFFFF, 0xBBFFFFFF)
 	gui.drawPixel(sprite['x'] - camera_x, sprite['y'] - camera_y, 0xFF00FF00)
-	gui.drawBox(sprite['x'] - camera_x, sprite['y'] - camera_y, sprite['x'] - camera_x + size_w, sprite['y'] - camera_y + size_h, bit.bor(0xFF000000, s_color), bit.bor(0x55000000, s_color))
+	gui.drawBox(sprite['x'] - camera_x, sprite['y'] - camera_y, sprite['x'] - camera_x + size_w, sprite['y'] - camera_y + size_h, 0xFF000000 |  s_color, 0x55000000 | s_color)
 	DrawNiceText(sprite['x'] - camera_x + 16, sprite['y'] - camera_y + 5, sprite['name'], 0xFF00FF00)
 	DrawNiceText(sprite['x'] - camera_x + 16, sprite['y'] - camera_y, "#"..to_hex(sprite['index']), 0xFF00FF00)
 end
@@ -609,7 +609,7 @@ local function draw_action_hitbox()
         -- i can't figure it out, sorry i'm giving up
 	    -- _0372 == 1 appears to match dashing-with-sword-out state.
         direction = memory.read_u8(0x2F)
-        index = bit.rshift(direction, 1)
+        index = direction >> 1
         -- Y = (direction-(direction%2))/2
         --xb = link_x + mainmemory.read_s16_le(0xF58E + index)
         --yb = link_y + mainmemory.read_s16_le(0xF596 + index) - 0X0A
@@ -619,8 +619,8 @@ local function draw_action_hitbox()
         y_offset_l = memory.read_u8(0x06F596 + Y, "System Bus")
         y_offset_h = memory.read_u8(0x06F58C + Y, "System Bus")
 
-        x_offset = bit.lshift(x_offset_h, 8) + x_offset_l
-        y_offset = bit.lshift(y_offset_h, 8) + y_offset_l
+        x_offset = (x_offset_h << 8) + x_offset_l
+        y_offset = (y_offset_h << 8) + y_offset_l
         xb = link_x + x_offset
         yb = link_y + y_offset
 
@@ -722,8 +722,8 @@ function draw_bombs()
 				-- this probably has overflow issues that i don't fully understand
 				y_low = y_low - 0x18 - altitude
 				x_low = x_low - 0x18
-				local x = bit.bor(x_low, bit.lshift(x_high, 8))
-				local y = bit.bor(y_low, bit.lshift(y_high, 8))
+				local x = x_low | (x_high << 8)
+				local y = y_low | (y_high << 8)
 				gameDrawBox(x, y, x + 0x30, y + 0x30, 0x88FF66FF, 0x44FF66FF)
 			end
 
@@ -740,7 +740,7 @@ oldrng = 0
 lastrngchange = 0
 
 function my_draw()
-  -- $0618[0x02] -   Y coordinate of the scrolling camera. Probably the lower bound for scrolling.
+ -- $0618[0x02] -   Y coordinate of the scrolling camera. Probably the lower bound for scrolling.
  -- $061A[0x02] -   Y coordinate of the upper bounds of scrolling.
  -- $061C[0x02] -   X coordinate of the lower bounds of scrolling.
  -- $061E[0x02] -   X coordinate of the upper bounds of scrolling.
@@ -771,10 +771,10 @@ function my_draw()
  -- DrawNiceText(180, 190, "YSpeed : "..yspeed)
  -- DrawNiceText(80, 190, string.format("OLDRNG  %d  : %d", lastrngchange, oldrng))
  -- DrawNiceText(80, 195, string.format(" RNG : %d,  -  213c: %x,  1a : %x", rng, rng213c, rng1a))
- -- DrawNiceText(100, 200, string.format("1: %x - 11: %x - 111: %x", bit.band(rng, 1), bit.band(rng, 3), bit.band(rng, 7)))
+ -- DrawNiceText(100, 200, string.format("1: %x - 11: %x - 111: %x", rng & 1, rng & 3, rng & 7))
 
  iterate_sprites()
- -- draw_link_hitbox()
+ draw_link_hitbox()
  draw_action_hitbox()
  draw_bombs()
 end
