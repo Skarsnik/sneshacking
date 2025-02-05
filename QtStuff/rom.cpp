@@ -25,7 +25,7 @@ Rom Rom::openRomFile(const QString& path)
         QByteArray romMakeUp = f.read(1);
         QByteArray data;
         f.seek(0x7FC0 + header_offset);
-        data = f.read(32);
+        data = f.read(80);
         if (romMakeUp[0] & 0x1) // bit for HiROM set
         {
             //This is unconsistent, let's try HiROM
@@ -35,15 +35,35 @@ Rom Rom::openRomFile(const QString& path)
             {
                 qDebug() << "ROM is HiROM";
                 f.seek(0xFFC0 + header_offset);
-                data = f.read(32);
+                data = f.read(80);
             }
         }
-        rom_infos* romInfo = get_rom_info(data.data());
+        qDebug() << data.toHex(' ');
+        const uint8_t* c_data = (const uint8_t*) data.constData();
+        rom_infos* romInfo = get_rom_info(c_data);
         rom.rawTitle = romInfo->title;
+        qDebug() << "ROM raw title" << rom.rawTitle;
         rom.name = QString(romInfo->title).trimmed();
         rom.type = RomType::HiROM;
         if (romInfo->type == LoROM)
             rom.type = RomType::LoROM;
+        qDebug() << "ROM Size : " << romInfo->size;
+        qDebug() << "SRAM Size : " << romInfo->sram_size;
+        qDebug() << "Version : " << romInfo->version;
+        qDebug() << "CheckSUM  : " << romInfo->checksum << " CheckSUM comp : " << romInfo->checksum_comp;
+        qDebug() << "ncop : " << romInfo->native_cop << "nbrk : " << romInfo->native_brk;
+        rom.headerInfos.nativeVectorCop = romInfo->native_cop;
+        rom.headerInfos.nativeVectorBrk = romInfo->native_brk;
+        rom.headerInfos.nativeVectorAbort = romInfo->native_abort;
+        rom.headerInfos.nativeVectorNMI = romInfo->native_nmi;
+        rom.headerInfos.nativeVectorReset = romInfo->native_reset;
+        rom.headerInfos.nativeVectorIRQ = romInfo->native_irq;
+        rom.headerInfos.emulationVectorCop = romInfo->emulation_cop;
+        rom.headerInfos.emulationVectorAbort = romInfo->emulation_abort;
+        rom.headerInfos.emulationVectorNMI = romInfo->emulation_nmi;
+        rom.headerInfos.emulationVectorReset = romInfo->emulation_reset;
+        rom.headerInfos.emulationVectorIRQ = romInfo->emulation_irq;
+
         f.seek(header_offset);
         unsigned int numberOfBanks = (f.size() - header_offset) / SNESBankSize;
         for (unsigned int i = 0; i < numberOfBanks; i++)

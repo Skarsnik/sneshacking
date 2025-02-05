@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WRamEntryEditor</class>
+ <widget class="QWidget" name="WRamEntryEditor">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>590</width>
+    <height>350</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="StructEditor" name="structEditor" native="true">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>290</x>
+     <y>80</y>
+     <width>271</width>
+     <height>241</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>298</x>
+     <y>40</y>
+     <width>261</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="arrayTypeHorizontalLayout">
+    <item>
+     <widget class="QLabel" name="arrayTypeLabel">
+      <property name="text">
+       <string>Array Type:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QComboBox" name="arrayTypeComboBox">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>10</y>
+     <width>261</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QLabel" name="label_3">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>50</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Type:</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QComboBox" name="typeComboBox">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>17</x>
+     <y>10</y>
+     <width>271</width>
+     <height>306</height>
+    </rect>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Address :</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="addressLineEdit"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Name :</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="nameLineEdit">
+        <property name="inputMask">
+         <string notr="true"/>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="sizeLabel">
+        <property name="text">
+         <string>Size :</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="hexSizeLabel">
+        <property name="text">
+         <string>0x0</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="sizeSpinBox"/>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_2">
+      <property name="text">
+       <string>Comment</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QPlainTextEdit" name="commentPlainTextEdit"/>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>StructEditor</class>
+   <extends>QWidget</extends>
+   <header>structeditor.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

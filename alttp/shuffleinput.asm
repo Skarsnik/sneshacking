@@ -225,12 +225,14 @@ shuffle_table_input:
   print "Shuffle table code start at: ", pc
   LDX !TAB_STOP
   LDA !TAB_STOP
+  CLC
   SBC !TAB_START
   INA
   STA !RANGE_SIZE
   .loop
-    STX $06
-    LDA $0FA0 ; RNG value
+  STX $06
+  LDA $0FA0 ; RNG value
+  CLC
   ADC $1A
   ; modulo
   STA $4204
@@ -250,7 +252,7 @@ shuffle_table_input:
   %a16()
   NOP : NOP : NOP
   LDA $4216
-  ADC $00
+  ADC !TAB_START
   STA $06 : ADC $06 : TAY; double this shit for index
   TXA : STA $06 :	ADC $06 : PHX : TAX ; double X
   LDA !TABLE_ICHANGE, X

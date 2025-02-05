@@ -9,7 +9,7 @@ local Line_to_nuts_color = 0x77FFFFFF
 local Line_to_exit_color = 0xFFFF5522
 local Line_to_enemy_color = 0xFF000000
 local show_enemy_direction = 1
-local show_nuts_direction = 1
+local show_nuts_direction = nil
 
 local prev_input
 local saved_pos_x = 0
@@ -45,6 +45,9 @@ if not event then
   gui.drawBox = function(x1,y1,x2,y2,outline_color,fill_color)
     gui.box(x1,y1,x2,y2,color_b2s(fill_color),color_b2s(outline_color))
   end
+  gui.drawPixel = function(x, y, color)
+    gui.pixel(x, y, color_bs2(color))
+  end
   event = {}
   event.onframeend = function(luaf,name)
     local on_gui_update_old = gui.register()
@@ -64,8 +67,9 @@ function DrawNiceText(text_x, text_y, str, color)
   if is_snes9x then 
     gui.text(text_x, text_y, str, color)
   else
-    local calc_x = client.transformPointX(text_x)
-    local calc_y = client.transformPointY(text_y)
+    local point = client.transformPoint(text_x, text_y)
+    local calc_x = point.x
+    local calc_y = point.y
     gui.text(calc_x, calc_y, str, color)
   end
 end
@@ -191,6 +195,7 @@ local my_draw = function()
   end
 
   local subposx = mainmemory.read_u32_le(0x005A);
+  local subposy = mainmemory.read_u32_le(0x005C);
   local posx = mainmemory.read_s16_le(0x0037)
   local posy = mainmemory.read_s16_le(0x0039)
   local nuts = memory.read_u16_le(0x0A29)
@@ -266,7 +271,11 @@ local my_draw = function()
 	if show_enemy_direction then
 	  gui.drawLine((hitbox_x1+hitbox_x2)/2,(hitbox_y1+hitbox_y2)/2, (enemy_x1+enemy_x2)/2 - camx,  (enemy_y1+enemy_y2)/2 - camy, Line_to_enemy_color)
 	end
+  if (enemy_sprite == 0x0C101 or enemy_sprite == 0x0C149) then
+    DrawNiceText(10, 180, "Bird X, Y : " .. enemy_x1 .. "," .. enemy_y1)
   end
+  end
+  
 
   -- Draw Collectible hitbox
   local last_collec_entry = memory.read_u16_le(0x1068)
@@ -321,8 +330,8 @@ local my_draw = function()
   DrawNiceText(160, 155, "VSpeed: " .. vspeed_text)
   DrawNiceText(160, 160, "CSpeedx : "..player_x1 - prev_px);
   DrawNiceText(160, 165, "CSSpeedx : "..subposx - prev_spx);
-  DrawNiceText(160, 170, "Pos X: " .. posx)
-  DrawNiceText(160, 174, "Pos Y: " .. posy)
+  DrawNiceText(160, 170, "Pos X: " .. posx .. " subpixel X : " .. subposx)
+  DrawNiceText(160, 174, "Pos Y: " .. posy .. " subpixel Y : " .. subposy)
   DrawNiceText(160, 190, "Nuts: " .. collected_nuts_count .. "/" ..  total_nuts_count)
   DrawNiceText(160, 198, "Sk.Point: " .. hex4(skill_points))
   prev_px = player_x1

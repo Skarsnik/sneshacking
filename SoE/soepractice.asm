@@ -51,8 +51,8 @@ db $4C,"e_",$44,"og",$00
 ; This is the start of the MNI routine
 ;C0/8247:	A90000  	lda #$0000
 ;C0/824A:	5B      	tcd
-;org $C08247
-;  jsl mni_begin
+org $C08247
+  jsl mni_begin
 
 
 org $C084a3

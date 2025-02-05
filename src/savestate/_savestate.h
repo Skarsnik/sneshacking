@@ -3,7 +3,7 @@
 #define H_PRIVATE_SAVESTATE_H
 
 
-#include <bits/types/FILE.h>
+#include <stdio.h>
 #include "savestateloader.h"
 
 typedef struct {
@@ -29,6 +29,7 @@ struct section_name_map_entry {
 typedef struct savestate_internal_s {
     FILE*               file;
     const char*         source_data;
+    size_t              source_data_lenght;
     unsigned int        source_pos;
 
     savestate_t*        public;

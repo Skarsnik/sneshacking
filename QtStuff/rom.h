@@ -21,6 +21,18 @@ struct Bank {
 
 struct HeaderInfos
 {
+    quint16 nativeVectorCop;
+    quint16 nativeVectorBrk;
+    quint16 nativeVectorAbort;
+    quint16 nativeVectorNMI;
+    quint16 nativeVectorReset;
+    quint16 nativeVectorIRQ;
+
+    quint16 emulationVectorCop;
+    quint16 emulationVectorAbort;
+    quint16 emulationVectorNMI;
+    quint16 emulationVectorReset;
+    quint16 emulationVectorIRQ;
 
 };
 

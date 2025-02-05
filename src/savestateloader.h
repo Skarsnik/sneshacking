@@ -1,9 +1,14 @@
 #ifndef H_SAVESTATELOADER_H
 #define H_SAVESTATELOADER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include <stdbool.h>
 
-typedef enum {
+typedef enum foo {
     CPU,
     REGISTER,
     DMA,
@@ -47,7 +52,7 @@ typedef struct {
 
 }   savestate_t;
 
-bool                    savestate_loader_init(const char* file_path, const char* source_data, savestate_t* statestate_info);
+bool                    savestate_loader_init(const char* file_path, const char* source_data, size_t source_data_lenght, savestate_t* statestate_info);
 bool                    savestate_loader_get_header(savestate_t* savestate_info);
 //bool                savestate_loader_get_all(savestate_t* savestate_info);
 savestate_section*      savestate_loader_list_section(savestate_t* savestate_info);
@@ -56,5 +61,8 @@ char**                  savestate_loader_list_section_name(savestate_t* savestat
 savestate_section_t*                savestate_loader_get(savestate_section section, savestate_t* savestate_info);
 
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

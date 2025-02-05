@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WRamEntryDisplay</class>
+ <widget class="QWidget" name="WRamEntryDisplay">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>712</width>
+    <height>367</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QTreeView" name="treeView">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>130</y>
+     <width>256</width>
+     <height>192</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>20</y>
+     <width>71</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Address : </string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="adddressLabel">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>20</y>
+     <width>49</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>$00000</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="layoutWidget">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>60</y>
+     <width>660</width>
+     <height>39</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <widget class="QLabel" name="rawBytesLabel">
+      <property name="font">
+       <font>
+        <family>Courier New</family>
+        <pointsize>24</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>00 00 00</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="signedLabel">
+      <property name="font">
+       <font>
+        <family>Courier New</family>
+        <pointsize>24</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Signed value</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="unsignedLabel">
+      <property name="font">
+       <font>
+        <family>Courier New</family>
+        <pointsize>24</pointsize>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Unsigned value</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

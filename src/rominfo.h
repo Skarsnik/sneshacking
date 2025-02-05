@@ -28,15 +28,28 @@ struct rom_infos {
     bool            fastrom;
     bool            make_sense;
     char            title[21];
-    unsigned int    size;
-    unsigned int    sram_size;
+    uint32_t        size;
+    uint32_t        sram_size;
     uint16_t        creator_id;
-    char            version;
-    char            checksum_comp;
-    char            checksum;
+    uint8_t         version;
+    uint16_t        checksum_comp;
+    uint16_t        checksum;
+
+
+    uint16_t        native_cop;
+    uint16_t        native_brk;
+    uint16_t        native_abort;
+    uint16_t        native_nmi;
+    uint16_t        native_reset;
+    uint16_t        native_irq;
+    uint16_t        emulation_cop;
+    uint16_t        emulation_abort;
+    uint16_t        emulation_nmi;
+    uint16_t        emulation_reset;
+    uint16_t        emulation_irq;
 };
 
-struct rom_infos* get_rom_info(const char* data);
+struct rom_infos* get_rom_info(const uint8_t *data);
 
 #ifdef __cplusplus
 }

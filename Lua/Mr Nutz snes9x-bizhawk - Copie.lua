@@ -61,8 +61,9 @@ function DrawNiceText(text_x, text_y, str, color)
   if is_snes9x then 
     gui.text(text_x, text_y, str, color)
   else
-    local calc_x = client.transformPointX(text_x)
-    local calc_y = client.transformPointY(text_y)
+    local point = client.transformPoint(text_x, text_y)
+    local calc_x = point.x
+    local calc_y = point.y
     gui.text(calc_x, calc_y, str, color)
   end
 end
