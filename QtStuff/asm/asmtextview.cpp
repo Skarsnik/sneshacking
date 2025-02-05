@@ -10,7 +10,7 @@ ASMTextView::ASMTextView(QWidget *parent) : QPlainTextEdit(parent)
     QFont font;
     font.setFamily("Courier");
     font.setFixedPitch(true);
-    font.setPointSize(10);
+    font.setPointSize(12);
 
     setFont(font);
     m_sideBar = new AsmTextViewSideBar(this);
@@ -24,44 +24,28 @@ qint32 ASMTextView::blockNumberFromOffset(quint32 offset)
     qint32 pos = 0;
     for (const auto& t : lineContent)
     {
-        if (t.type == LineContentType::Instruction && t.instruction.offset == offset)
+        if (t.type == LineContentType::Instruction && t.instruction->offset == offset)
             return pos;
         pos++;
     }
     return -1;
 }
 
-void ASMTextView::setAsm(QList<DisasmInstruction> myAsm)
+void ASMTextView::setAsm(DisasmThing dThing)
 {
     //QTextCursor cursor(document());
-    for (const auto& instruction : myAsm)
+    for (const auto instruction : dThing.instructions)
     {
-        quint32 operand = instruction.operand[0] + instruction.operand[1] * 0x100 + instruction.operand[2] * 0x10000;
-        if (instruction.advancedStrinfigy.isEmpty())
-            textCursor().insertText(instruction.basicStrinfigy + "\n");
+        if (instruction->advancedStrinfigy.isEmpty())
+            textCursor().insertText(instruction->basicStrinfigy + "\n");
         else
-            textCursor().insertText(instruction.advancedStrinfigy + "\n");
-        if (instruction.addressing == PC_RELATIVE || instruction.addressing == PC_RELATIVE_WORD)
-        {
-            BranchingStuff bs;
-            bs.startOffset = instruction.offset;
-            qint16 pcRel = instruction.addressing == PC_RELATIVE ? (qint8) operand : (qint16) operand;
-            bs.pointedOffset = instruction.offset + pcRel + 2;
-            m_branching[instruction.offset] = bs;
-        }
-        if (instruction.opcode == S_INSTR_JMP_ADDRESS_WORD)
-        {
-            BranchingStuff bs;
-            bs.startOffset = instruction.offset;
-            bs.pointedOffset = (instruction.offset >> 16) + operand;
-            m_branching[instruction.offset] = bs;
-        }
+            textCursor().insertText(instruction->advancedStrinfigy + "\n");
         LineContent lc;
         lc.type = LineContentType::Instruction;
         lc.instruction = instruction;
         lineContent.append(lc);
     }
-    for (const auto& bs : m_branching)
+    for (const auto& bs : dThing.localBranchings)
     {
         const auto bn = blockNumberFromOffset(bs.pointedOffset);
         if (bn  == -1)
@@ -75,11 +59,33 @@ void ASMTextView::setAsm(QList<DisasmInstruction> myAsm)
         lc.label.name = QString(".label_%1").arg(sHex(bs.pointedOffset & 0x00FFFF, 2));
         cur.insertText(lc.label.name + "\n");
         lineContent.insert(bn, lc);
+        quint8 maxOffsetFound = 0;
+        auto plop = displayOffsetOfOffset.keys();
+        std::sort(plop.begin(), plop.end());
+        for (auto f : plop)
+        {
+            if (bs.startOffset > bs.pointedOffset) // up
+            {
+                if (f > bs.pointedOffset && maxOffsetFound < displayOffsetOfOffset[f])
+                    maxOffsetFound = displayOffsetOfOffset[f];
+                if (f > bs.startOffset)
+                    break;
+            }
+            if (bs.startOffset < bs.pointedOffset) // down
+            {
+                if (f > bs.startOffset && maxOffsetFound < displayOffsetOfOffset[f])
+                    maxOffsetFound = displayOffsetOfOffset[f];
+                if (f > bs.pointedOffset)
+                    break;
+            }
+        }
+        displayOffsetOfOffset[bs.startOffset] = maxOffsetFound + 1;
+        displayOffsetOfOffset[bs.pointedOffset] = maxOffsetFound + 1;
     }
     QTextCursor tc(document());
     tc.movePosition(QTextCursor::Start);
     setTextCursor(tc);
-    //instructions = myAsm;
+    disasmThing = dThing;
 }
 
 int ASMTextView::sideBarAreaWidth()
@@ -103,7 +109,7 @@ void ASMTextView::sideBarPaintEvent(QPaintEvent *event)
     int blockNumber = block.blockNumber();
     int top = (int) blockBoundingGeometry(block).translated(contentOffset()).top();
     int bottom = top + (int) blockBoundingRect(block).height();
-    DisasmInstruction inst;
+    DisasmInstruction* inst;
     painter.setPen(QColor(Qt::black).lighter());
     painter.drawLine(m_sideBar->width() - wChar, event->rect().top(), m_sideBar->width() - wChar, event->rect().bottom());
     while (block.isValid() && top <= event->rect().bottom()) {
@@ -112,10 +118,10 @@ void ASMTextView::sideBarPaintEvent(QPaintEvent *event)
             if (lineContent.at(blockNumber).type == LineContentType::Instruction)
             {
                 inst = lineContent.at(blockNumber).instruction;
-                const QString pcText = QString("%1:%2").arg(sHex(inst.offset >> 16, 1)).arg(sHex(inst.offset & 0x00FFFF, 2));
-                const QString opcodeText = sHex(inst.opcode);
-                const quint32 operand = inst.operand[0] + inst.operand[1] * 0x100 + inst.operand[2] * 0x10000;
-                const QString operandText = inst.length == 1 ? "" : sHex(operand, (inst.length - 1));
+                const QString pcText = QString("%1:%2").arg(sHex(inst->offset >> 16, 1)).arg(sHex(inst->offset & 0x00FFFF, 2));
+                const QString opcodeText = sHex(inst->opcode);
+                const quint32 operand = inst->operand[0] + inst->operand[1] * 0x100 + inst->operand[2] * 0x10000;
+                const QString operandText = inst->length == 1 ? "" : sHex(operand, (inst->length - 1));
                 painter.setPen(Qt::black);
                 painter.drawText(0, top, fontMetrics().horizontalAdvance(pcText), fontMetrics().height(),
                                  Qt::AlignLeft, pcText);
@@ -136,40 +142,17 @@ void ASMTextView::sideBarPaintEvent(QPaintEvent *event)
     auto lcFirst = lineContent.at(firstBlockNumber);
     while (lcFirst.type != LineContentType::Instruction)
         lcFirst = lineContent.at(++firstBlockNumber);
-    quint32 firstVisibleOffset = lcFirst.instruction.offset;
-    quint32 lastVisibleOffset = inst.offset;
-    quint8 dOffset = 1;
+    quint32 firstVisibleOffset = lcFirst.instruction->offset;
+    quint32 lastVisibleOffset = inst->offset;
     QList<QColor> colors = {Qt::darkGreen, Qt::darkBlue, Qt::darkRed, Qt::darkCyan};
-    QMap<quint32, quint8> offsetDOffset;
-    for (const auto& branch : qAsConst(m_branching))
+    for (const auto& branch : qAsConst(disasmThing.localBranchings))
     {
-        quint8 maxOffsetFound = 0;
-        auto plop = offsetDOffset.keys();
-        std::sort(plop.begin(), plop.end());
-        for (auto f : plop)
-        {
-            if (branch.startOffset > branch.pointedOffset) // up
-            {
-                if (f > branch.pointedOffset && maxOffsetFound < offsetDOffset[f])
-                    maxOffsetFound = offsetDOffset[f];
-                if (f > branch.startOffset)
-                    break;
-            }
-            if (branch.startOffset < branch.pointedOffset) // down
-            {
-                if (f > branch.startOffset && maxOffsetFound < offsetDOffset[f])
-                    maxOffsetFound = offsetDOffset[f];
-                if (f > branch.pointedOffset)
-                    break;
-            }
-        }
-        dOffset = maxOffsetFound + 1;
-        offsetDOffset[branch.startOffset] = dOffset;
-        offsetDOffset[branch.pointedOffset] = dOffset;
+
         if (   (branch.startOffset < firstVisibleOffset && branch.pointedOffset < firstVisibleOffset)
             || (branch.startOffset > lastVisibleOffset && branch.pointedOffset > lastVisibleOffset)
             )
             continue;
+        quint8 dOffset = displayOffsetOfOffset[branch.startOffset];
         QTextBlock startBlock = document()->findBlockByLineNumber(blockNumberFromOffset(branch.startOffset));
         QTextBlock pointedBlock = document()->findBlockByLineNumber(blockNumberFromOffset(branch.pointedOffset));
         qDebug() << "Start " << startBlock.text() << " - Pointed " << pointedBlock.text();

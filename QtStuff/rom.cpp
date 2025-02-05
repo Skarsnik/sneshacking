@@ -1,18 +1,42 @@
-#include <QFile>
 #include <QDebug>
 
 #include "rom.h"
 #include "rominfo.h"
+#include "rommapping.h"
 
+
+QByteArray Rom::datas(snesAddress address, quint32 length)
+{
+    quint32 romOffset = snesToPc(address);
+    qFile->seek(romOffset);
+    return qFile->read(length);
+}
+
+snesAddress Rom::pcToSnes(quint32 address)
+{
+    enum rom_type cType = (enum rom_type) mapping;
+    int result = rommapping_pc_to_snes(address, cType, hasHeader);
+    if (fastRom) // FIXME, this is for hirom
+    {
+        return snesAddress(result + 0x800000);
+    }
+    return snesAddress(result);
+}
+
+quint32 Rom::snesToPc(snesAddress address)
+{
+    return rommapping_snes_to_pc(address, (enum rom_type) mapping, hasHeader);
+}
 
 Rom Rom::openRomFile(const QString& path)
 {
     Rom rom;
     qDebug() << path;
-    QFile f(path);
-    if (f.open(QIODevice::ReadOnly))
+    rom.qFile = new QFile(path);
+    QFile* f = rom.qFile;
+    if (f->open(QIODevice::ReadOnly))
     {
-        if (f.size() & 0x200)
+        if (f->size() & 0x200)
         {
             qDebug() << "ROM has header";
             rom.hasHeader = true;
@@ -21,21 +45,21 @@ Rom Rom::openRomFile(const QString& path)
             qDebug() << "ROM has no header";
         }
         unsigned int header_offset = rom.hasHeader ? 0x200 : 0;
-        f.seek(0x7FD5 + header_offset);
-        QByteArray romMakeUp = f.read(1);
+        f->seek(0x7FD5 + header_offset);
+        QByteArray romMakeUp = f->read(1);
         QByteArray data;
-        f.seek(0x7FC0 + header_offset);
-        data = f.read(80);
+        f->seek(0x7FC0 + header_offset);
+        data = f->read(80);
         if (romMakeUp[0] & 0x1) // bit for HiROM set
         {
             //This is unconsistent, let's try HiROM
-            f.seek(0xFFD5 + header_offset);
-            romMakeUp = f.read(1);
+            f->seek(0xFFD5 + header_offset);
+            romMakeUp = f->read(1);
             if (romMakeUp[0] & 0x1)
             {
                 qDebug() << "ROM is HiROM";
-                f.seek(0xFFC0 + header_offset);
-                data = f.read(80);
+                f->seek(0xFFC0 + header_offset);
+                data = f->read(80);
             }
         }
         qDebug() << data.toHex(' ');
@@ -44,9 +68,10 @@ Rom Rom::openRomFile(const QString& path)
         rom.rawTitle = romInfo->title;
         qDebug() << "ROM raw title" << rom.rawTitle;
         rom.name = QString(romInfo->title).trimmed();
-        rom.type = RomType::HiROM;
+        rom.mapping = RomMapping::HiROM;
         if (romInfo->type == LoROM)
-            rom.type = RomType::LoROM;
+            rom.mapping = RomMapping::LoROM;
+        rom.fastRom = romInfo->fastrom;
         qDebug() << "ROM Size : " << romInfo->size;
         qDebug() << "SRAM Size : " << romInfo->sram_size;
         qDebug() << "Version : " << romInfo->version;
@@ -64,17 +89,16 @@ Rom Rom::openRomFile(const QString& path)
         rom.headerInfos.emulationVectorReset = romInfo->emulation_reset;
         rom.headerInfos.emulationVectorIRQ = romInfo->emulation_irq;
 
-        f.seek(header_offset);
-        unsigned int numberOfBanks = (f.size() - header_offset) / SNESBankSize;
+        f->seek(header_offset);
+        unsigned int numberOfBanks = (f->size() - header_offset) / SNESBankSize;
         for (unsigned int i = 0; i < numberOfBanks; i++)
         {
             Bank bank;
-            f.seek(i * SNESBankSize + header_offset);
-            bank.data = f.read(SNESBankSize);
+            f->seek(i * SNESBankSize + header_offset);
+            bank.data = f->read(SNESBankSize);
             bank.name = QString("Bank $%1").arg(i, 2, 16, QChar('0'));
             rom.banks.append(bank);
         }
-
     }
     return rom;
 }

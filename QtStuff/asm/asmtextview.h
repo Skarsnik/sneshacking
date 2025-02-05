@@ -5,12 +5,6 @@
 //#include "asm/asmtextviewsidebar.h"
 #include "asm/disasmhandler.h"
 
-struct BranchingStuff
-{
-    quint32 startOffset;
-    quint32 pointedOffset;
-};
-
 enum class LineContentType
 {
     Instruction,
@@ -27,7 +21,7 @@ struct Label
 struct LineContent
 {
     LineContentType         type;
-    DisasmInstruction       instruction;
+    DisasmInstruction       *instruction;
     Label                   label;
 };
 
@@ -35,7 +29,7 @@ class ASMTextView : public QPlainTextEdit
 {
 public:
     ASMTextView(QWidget* parent = nullptr);
-    void    setAsm(QList<DisasmInstruction> myAsm);
+    void    setAsm(DisasmThing dThing);
     int     sideBarAreaWidth();
     void    sideBarPaintEvent(QPaintEvent* event);
     void    resizeEvent(QResizeEvent* ev);
@@ -43,7 +37,8 @@ public:
 private:
     QWidget* m_sideBar;
     QList<LineContent> lineContent;
-    QMap<quint32, BranchingStuff>   m_branching;
+    DisasmThing        disasmThing;
+    QMap<snesAddress, quint8>   displayOffsetOfOffset;
 
     qint32  blockNumberFromOffset(quint32 offset);
     void    updateSideBarAreaWidth(int);

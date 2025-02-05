@@ -66,7 +66,7 @@ inline QString operandString(const snes_asm_instruction& instruction, quint32 op
 DisasmInstruction::DisasmInstruction(const snes_asm_instruction& instruction)
 {
     opcode = instruction.opcode;
-    offset = instruction.offset;
+    offset = snesAddress(instruction.offset);
     length = instruction.length;
     operand[0] = instruction.operand[0];
     operand[1] = instruction.operand[1];
@@ -90,10 +90,16 @@ DisasmInstruction::DisasmInstruction(const snes_asm_instruction& instruction)
         advancedStrinfigy = "sep P ";
         for (unsigned int i = 0; i < 8; i++)
         {
+            if (i == 2 && (operand & 0b00100000) == 0b00100000)
+            {
+                advancedStrinfigy += "m¹⁶";
+                qDebug() << "PIKOOO";
+            } else {
             if ((operand & (0b10000000 >> i)) == 0b10000000 >> i)
                 advancedStrinfigy += flags[i];
             else
                 advancedStrinfigy += "-";
+            }
         }
     }
     if (opcode == S_INSTR_REP_VALUE_BYTE)
@@ -107,4 +113,55 @@ DisasmInstruction::DisasmInstruction(const snes_asm_instruction& instruction)
                 advancedStrinfigy += "-";
         }
     }
+}
+
+DisasmThing DisasmHandler::disassembleRoutine(snesAddress pc)
+{
+    quint32 mPc = pc;
+    auto* instructions = disassemble_str((const uint8_t*)rom->datas(pc, 0x1000).constData(), 0x1000, &mPc, true);
+    auto plop = buildStuff(instructions);
+    plop.endOffset = snesAddress(mPc);
+    return plop;
+}
+
+DisasmThing DisasmHandler::buildStuff(snes_asm_instruction_node *instructions)
+{
+    DisasmThing toret;
+    auto list = instructions;
+    DisasmInstruction* prevInstr = nullptr;
+    while (list)
+    {
+        auto instruction = new DisasmInstruction(list->instruction);
+        toret.instructions.append(new DisasmInstruction(list->instruction));
+        quint32 operand = instruction->operand[0] + instruction->operand[1] * 0x100 + instruction->operand[2] * 0x10000;
+        if (instruction->addressing == PC_RELATIVE || instruction->addressing == PC_RELATIVE_WORD)
+        {
+            Branching bs;
+            bs.startOffset = instruction->offset;
+            qint16 pcRel = instruction->addressing == PC_RELATIVE ? (qint8) operand : (qint16) operand;
+            bs.pointedOffset = snesAddress(instruction->offset + pcRel + 2);
+            bs.startInstruction = instruction;
+            bs.context = instruction->basicStrinfigy;
+            toret.localBranchings[instruction->offset] = bs;
+        }
+        if (instruction->opcode == S_INSTR_JMP_ADDRESS_WORD) // FIXME this can be out of routine
+        {
+            Branching bs;
+            bs.startOffset = instruction->offset;
+            bs.pointedOffset = snesAddress((instruction->offset >> 16) + operand);
+            bs.startInstruction = instruction;
+            toret.localBranchings[instruction->offset] = bs;
+        }
+        if (instruction->opcode == S_INSTR_JMP_ADDRESS_LONG)
+        {
+            Branching bs;
+            bs.startOffset = instruction->offset;
+            bs.pointedOffset = snesAddress((instruction->offset >> 16) + operand);
+            bs.startInstruction = instruction;
+            toret.globalBranchings[instruction->offset] = bs;
+        }
+        prevInstr = instruction;
+        list = list->next;
+    }
+    return toret;
 }

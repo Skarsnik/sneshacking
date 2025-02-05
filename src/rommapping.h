@@ -31,10 +31,10 @@ extern "C" {
 
 
 enum rom_type {
-  LoROM,
-  HiROM,
-  ExLoROM,
-  ExHiROM
+  LoROM = 1,
+  HiROM = 2,
+  ExLoROM = 3,
+  ExHiROM = 4
 };
 
 extern char *rommapping_error_text;

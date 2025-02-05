@@ -27,6 +27,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++17
 
 SOURCES += \
+        ../src/mapping_hirom.c \
+        ../src/mapping_lorom.c \
+        ../src/rommapping.c \
         asm/asmtextblock.cpp \
         asm/asmtextview.cpp \
         asm/asmtextviewsidebar.cpp \
@@ -35,6 +38,7 @@ SOURCES += \
         asm/gen_asm_definition.c \
         fieldstablewidget.cpp \
         main.cpp \
+        mytype.cpp \
         romviewer.cpp \
         rom.cpp \
         ../src/rominfo.c \
@@ -55,6 +59,7 @@ HEADERS += \
         asm/disasmhandler.h \
         fieldstablewidget.h \
         mglobal.h \
+        mytype.h \
         romviewer.h \
         rom.h \
         snestype.h \

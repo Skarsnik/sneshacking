@@ -43,18 +43,12 @@ int main(int argc, char *argv[])
     /*WRamMapEditor mEditor;
     mEditor.show();*/
 
-    quint32 pc = rom.headerInfos.emulationVectorReset;
-    qDebug() << "NMI is " << pc;
-    auto list_instruction = disassemble_str((const uint8_t*)rom.banks.at(0).data.mid(pc - 0x8000, 0x300).constData(), 0x300, &pc, true);
-    QList<DisasmInstruction> instructions;
-    while (list_instruction != NULL)
-    {
-        instructions.append(DisasmInstruction(list_instruction->instruction));
-        list_instruction = list_instruction->next;
-    }
+    DisasmHandler dh;
+    dh.rom = &rom;
+    auto r = dh.disassembleRoutine(snesAddress(rom.headerInfos.emulationVectorReset));
     ASMTextView aView;
 
-    aView.setAsm(instructions);
+    aView.setAsm(r);
     aView.show();
     return a.exec();
 }
