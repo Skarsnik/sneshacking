@@ -41,9 +41,9 @@ static quint32 dataToUnSigned(QByteArray entryData)
 }
 
 
-void WRamEntryDisplay::setWRamMapEntry(WRAMMap::MapEntry *entry)
+void WRamEntryDisplay::setWRamMapEntry(Dictionnary* entry)
 {
-    qDebug() << "Showing " << entry->name << QString::number(entry->address, 16) << entry->size;
+    qDebug() << "Showing " << entry->name << QString::number(entry->address, 16) << entry->size << entry->type;
     unsigned int eSize = entry->size;
     ui->adddressLabel->setText("$" + QString::number(entry->address, 16).toUpper());
     QByteArray entryData = wramData->mid(entry->address, eSize);

@@ -17,7 +17,7 @@ public:
     explicit WRamEntryDisplay(QWidget *parent = nullptr);
     ~WRamEntryDisplay();
     void     setWramData(QByteArray* data);
-    void     setWRamMapEntry(WRAMMap::MapEntry* entry);
+    void     setWRamMapEntry(Dictionnary* entry);
 
 private:
     QByteArray*          wramData;

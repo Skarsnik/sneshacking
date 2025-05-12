@@ -13,9 +13,11 @@ WRamMapEditor::WRamMapEditor(QWidget *parent) :
     m_currentRow = 0;
     entryListModel = new QStandardItemModel();
     ui->mapEntryTableView->setModel(entryListModel);
-    listEntry.append(createFakeEntry(0, 0x10000));
-    listEntry.append(createFakeEntry(0x10000, 0x10000));
-    setNWClient(new EmuNWAccessClient(this));
+    listEntry.append(createFakeEntry(snesAddress(0), 0x10000));
+        //qDebug() << "First unknow type is " <<listEntry.at(0).entry->type;
+    listEntry.append(createFakeEntry(snesAddress(0x10000), 0x10000));
+
+    //setNWClient(new EmuNWAccessClient(this));
     for (auto& entry : listEntry)
     {
         addUiEntryItem(entry.entry);
@@ -23,7 +25,7 @@ WRamMapEditor::WRamMapEditor(QWidget *parent) :
     connect(ui->wramEntryEditor, &WRamEntryEditor::entryChanged, this, &WRamMapEditor::onEntryChanged);
     ui->mapEntryTableView->horizontalHeader()->setStretchLastSection(true);
     ui->mapEntryTableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
-    loadFile("D:/Project/sneshacking/SoE/rammap.json");
+    //loadFile("D:/Project/sneshacking/SoE/rammap.json");
     NWATimer.setInterval(500);
     WRAMDatas = QByteArray(0x20000, '\0');
     ui->wramEntryDisplay->setWramData(&WRAMDatas);
@@ -93,14 +95,14 @@ void WRamMapEditor::on_mapEntryTableView_clicked(const QModelIndex &index)
     m_currentRow = index.row();
     ui->wramEntryEditor->setWRamEntry(entry.entry);
     ui->wramEntryEditor->setEnabled(true);
-    ui->wramEntryDisplay->setWRamMapEntry(entry.entry);
+    //ui->wramEntryDisplay->setWRamMapEntry(entry.entry);
 }
 
 void WRamMapEditor::onEntryChanged()
 {
     ListEntry& currentEntry = listEntry[m_currentRow];
     unsigned int csize = currentEntry.entry->calculatedSize();
-    WRAMMap::MapEntry* currentWRAMEntry = currentEntry.entry;
+    Dictionnary* currentWRAMEntry = currentEntry.entry;
     qDebug() << "Entry changed";
     if (currentEntry.real == false && currentWRAMEntry->type != SNESType::DataType::Unknow)
     {
@@ -112,7 +114,7 @@ void WRamMapEditor::onEntryChanged()
         //int prev_address = 0;
         if (m_currentRow != 0)
         {
-            WRAMMap::MapEntry* prevEntry = listEntry.at(m_currentRow - 1).entry;
+            Dictionnary* prevEntry = listEntry.at(m_currentRow - 1).entry;
             if (prevEntry->type == SNESType::DataType::Unknow)
                 ;
         }
@@ -137,7 +139,7 @@ void WRamMapEditor::onEntryChanged()
         }
         if (newNextEntry)
         {
-            auto nEntry = createFakeEntry(currentWRAMEntry->address + csize, next_address - currentWRAMEntry->address + csize);
+            auto nEntry = createFakeEntry(snesAddress(currentWRAMEntry->address + csize), next_address - currentWRAMEntry->address + csize);
             listEntry.insert(m_currentRow + 1, nEntry);
             addUiEntryItem(nEntry.entry, m_currentRow + 1);
         }
@@ -200,7 +202,7 @@ void    WRamMapEditor::loadFile(QString file)
         ListEntry e;
         e.real = true;
         //e.text = entry.name;
-        e.entry = new WRAMMap::MapEntry();
+        e.entry = new Dictionnary();
         e.address = entry.address;
         *e.entry = entry;
         if (listEntry.size() > 2)
@@ -208,19 +210,19 @@ void    WRamMapEditor::loadFile(QString file)
             auto& prevEntry = map.entries.at(i - 1);
             if (prevEntry.address + prevEntry.calculatedSize() - entry.address > 0)
             {
-                listEntry.append(createFakeEntry(prevEntry.address + 1, entry.address - prevEntry.address - 1));
+                listEntry.append(createFakeEntry(snesAddress(prevEntry.address + 1), entry.address - prevEntry.address - 1));
             }
         }
         if (i == 0 && entry.address > 0)
         {
-            listEntry.append(createFakeEntry(0, e.entry->address));
+            listEntry.append(createFakeEntry(snesAddress(0), e.entry->address));
         }
         listEntry.append(e);
         i++;
     }
     if (listEntry.last().address + listEntry.last().entry->calculatedSize() < 0x1FFFF)
     {
-        listEntry.append(createFakeEntry(listEntry.last().address + listEntry.last().entry->calculatedSize(), 0x20000 - listEntry.last().entry->address - listEntry.last().entry->calculatedSize()));
+        listEntry.append(createFakeEntry(snesAddress(listEntry.last().address + listEntry.last().entry->calculatedSize()), 0x20000 - listEntry.last().entry->address - listEntry.last().entry->calculatedSize()));
     }
     for (auto& entry :  listEntry)
     {
@@ -230,7 +232,7 @@ void    WRamMapEditor::loadFile(QString file)
     ui->mapEntryTableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 }
 
-void WRamMapEditor::addUiEntryItem(WRAMMap::MapEntry *entry, int row)
+void WRamMapEditor::addUiEntryItem(Dictionnary *entry, int row)
 {
     auto newAddItem = new QStandardItem(UiAddressItemText(entry));
     auto newNameItem = new QStandardItem(entry->name);
@@ -244,25 +246,25 @@ void WRamMapEditor::addUiEntryItem(WRAMMap::MapEntry *entry, int row)
     }
 }
 
-QString WRamMapEditor::UiAddressItemText(WRAMMap::MapEntry *entry)
+QString WRamMapEditor::UiAddressItemText(Dictionnary *entry)
 {
     return QString("$%1").arg(entry->address, 0, 16, QChar(' ')).toUpper();
 }
 
-WRamMapEditor::ListEntry WRamMapEditor::createFakeEntry(unsigned int address, unsigned int size)
+WRamMapEditor::ListEntry WRamMapEditor::createFakeEntry(snesAddress address, unsigned int size)
 {
     ListEntry toret;
     toret.real = false;
     toret.address = address;
-    toret.entry = new WRAMMap::MapEntry();
-    toret.entry->address = address;
+    toret.entry = new Dictionnary();
+    toret.entry->address = snesAddress(address);
     toret.entry->size = size;
     toret.entry->type = DataType::Unknow;
     toret.entry->name = fakeEntryText(address, size);
     return toret;
 }
 
-QString    WRamMapEditor::fakeEntryText(unsigned int address, unsigned int size)
+QString    WRamMapEditor::fakeEntryText(snesAddress address, unsigned int size)
 {
     return "Unknow " + QString("$%1-$%2").arg(address, 5, 16, QChar('0')).arg(address + size - 1, 5, 16, QChar('0')).toUpper();
 }

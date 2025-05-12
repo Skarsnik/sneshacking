@@ -72,6 +72,8 @@ DisasmInstruction::DisasmInstruction(const snes_asm_instruction& instruction)
     operand[1] = instruction.operand[1];
     operand[2] = instruction.operand[2];
     addressing = instruction.addressing;
+    accumulator_16 = instruction.a_16;
+    register_16 = instruction.r_16;
 
     quint32 operand = instruction.operand[0] + instruction.operand[1] * 0x100 + instruction.operand[2] * 0x10000;
     basicStrinfigy = QString("%1 %2")
@@ -132,6 +134,7 @@ DisasmThing DisasmHandler::buildStuff(snes_asm_instruction_node *instructions)
     while (list)
     {
         auto instruction = new DisasmInstruction(list->instruction);
+        instruction->prev = prevInstr;
         toret.instructions.append(new DisasmInstruction(list->instruction));
         quint32 operand = instruction->operand[0] + instruction->operand[1] * 0x100 + instruction->operand[2] * 0x10000;
         if (instruction->addressing == PC_RELATIVE || instruction->addressing == PC_RELATIVE_WORD)
@@ -159,6 +162,41 @@ DisasmThing DisasmHandler::buildStuff(snes_asm_instruction_node *instructions)
             bs.pointedOffset = snesAddress((instruction->offset >> 16) + operand);
             bs.startInstruction = instruction;
             toret.globalBranchings[instruction->offset] = bs;
+        }
+        if (instruction->addressing >= ADDRESS
+            && instruction->addressing <= ADDRESS_LONG_INDIRECT)
+        {
+            AddressAccess   ac;
+            ac.address = snesAddress(operand);
+            ac.instruction = instruction;
+            if (instruction->opcode == S_INSTR_CPX_ADDRESS ||
+                instruction->opcode == S_INSTR_CPX_ADDRESS_WORD ||
+                instruction->opcode == S_INSTR_CPY_ADDRESS ||
+                instruction->opcode == S_INSTR_CPY_ADDRESS_WORD ||
+
+                instruction->opcode == S_INSTR_LDX_ADDRESS ||
+                instruction->opcode == S_INSTR_LDX_ADDRESS_WORD ||
+                instruction->opcode == S_INSTR_LDX_ADDRESS_WORD_INDEXED_Y ||
+                instruction->opcode == S_INSTR_LDX_ADDRESS_INDEXED_Y ||
+
+                instruction->opcode == S_INSTR_LDY_ADDRESS ||
+                instruction->opcode == S_INSTR_LDY_ADDRESS_WORD ||
+                instruction->opcode == S_INSTR_LDY_ADDRESS_WORD_INDEXED_X ||
+                instruction->opcode == S_INSTR_LDY_ADDRESS_INDEXED_X ||
+
+                instruction->opcode == S_INSTR_STX_ADDRESS ||
+                instruction->opcode == S_INSTR_STX_ADDRESS_INDEXED_Y ||
+                instruction->opcode == S_INSTR_STX_ADDRESS_WORD ||
+
+                instruction->opcode == S_INSTR_STY_ADDRESS ||
+                instruction->opcode == S_INSTR_STY_ADDRESS_WORD ||
+                instruction->opcode == S_INSTR_STY_ADDRESS_INDEXED_X)
+            {
+                ac.accessSize = (instruction->register_16) ? SNESType::DataType::Word : SNESType::DataType::Byte;
+            } else {
+                ac.accessSize = (instruction->accumulator_16) ? SNESType::DataType::Word : SNESType::DataType::Byte;
+            }
+            addressAccess[ac.address].append(ac);
         }
         prevInstr = instruction;
         list = list->next;

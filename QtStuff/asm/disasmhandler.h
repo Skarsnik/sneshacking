@@ -6,6 +6,8 @@
 #include "disasm.h"
 #include "rom.h"
 #include "mytype.h"
+#include "snestype.h"
+
 
 struct DisasmInstruction
 {
@@ -17,6 +19,11 @@ struct DisasmInstruction
     quint8      operand[3];
     QString     basicStrinfigy;
     QString     advancedStrinfigy;
+    quint32                 operandValue;
+    SNESType::DataType      operandType;
+    bool                    accumulator_16 = true;
+    bool                    register_16 = true;
+    DisasmInstruction*      prev;
 
     enum snes_asm_simplified_addressing addressing;
 };
@@ -38,6 +45,13 @@ struct DisasmThing
     snesAddress                     endOffset;
 };
 
+struct AddressAccess
+{
+    snesAddress         address;
+    DisasmInstruction*  instruction;
+    SNESType::DataType  accessSize; // This is the size of the interaction
+};
+
 class DisasmHandler
 {
 public:
@@ -46,6 +60,7 @@ public:
     DisasmThing    disassemble(snesAddress pc, quint32 length);
 
     Rom*    rom;
+    QMap<snesAddress, QList<AddressAccess>>    addressAccess;
 
 private:
     DisasmThing buildStuff(snes_asm_instruction_node* instructions);

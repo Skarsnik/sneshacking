@@ -32,6 +32,8 @@ snes_asm_instruction_node*    disassemble_str(const uint8_t* bytecode, size_t by
 
         new_node->instruction.opcode = opcode;
         new_node->instruction.offset = *pc;
+        new_node->instruction.a_16 = accumulator_16;
+        new_node->instruction.r_16 = register_16;
 
         memset(new_node->instruction.operand, 0, 3);
         const snes_asm_instruction_definition* def = &snes_asm_instuction_list[opcode];

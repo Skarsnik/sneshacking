@@ -52,6 +52,8 @@ typedef struct {
     uint8_t     opcode;
     uint8_t     operand[3]; // In the original byte code order
     uint8_t     length; // Total length
+    bool        a_16;
+    bool        r_16;
     enum snes_asm_simplified_addressing addressing;
 } snes_asm_instruction;
 

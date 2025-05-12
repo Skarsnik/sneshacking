@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QJsonObject>
-#include "snestype.h"
+#include "dictionnary.h"
 
 using namespace SNESType;
 
@@ -14,18 +14,7 @@ public:
     QJsonObject     toJSON() const;
     static  WRAMMap fromJSON(const QJsonObject &obj);
 
-    struct MapEntry : public Thing
-    {
-        DataType    type;
-        DataType    subType;
-        unsigned    int size;
-        quint32     address;
-        SNESStruct  sstruct;
-        Array       array;
-        unsigned    int calculatedSize() const;
-        QString         toString();
-    };
-    QVector<MapEntry>   entries;
+    QVector<Dictionnary>   entries;
 };
 
 #endif // WRAMMAP_H

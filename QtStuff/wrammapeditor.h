@@ -37,8 +37,8 @@ private:
     struct  ListEntry {
         //QString             text;
         bool                real;
-        WRAMMap::MapEntry*  entry;
-        unsigned int        address;
+        Dictionnary*        entry;
+        snesAddress         address;
     };
     void                onEntryChanged();
     QList<ListEntry>    listEntry;
@@ -51,11 +51,11 @@ private:
     QTimer              NWATimer;
     QByteArray          WRAMDatas;
 
-    WRamMapEditor::ListEntry    createFakeEntry(unsigned int address, unsigned int size);
+    WRamMapEditor::ListEntry    createFakeEntry(snesAddress address, unsigned int size);
     void                        loadFile(QString file);
-    QString                     UiAddressItemText(WRAMMap::MapEntry *entry);
-    void                        addUiEntryItem(WRAMMap::MapEntry *entry, int row = -1);
-    QString                     fakeEntryText(unsigned int address, unsigned int size);
+    QString                     UiAddressItemText(Dictionnary *entry);
+    void                        addUiEntryItem(Dictionnary *entry, int row = -1);
+    QString                     fakeEntryText(snesAddress address, unsigned int size);
     void                        refreshedData();
 };
 

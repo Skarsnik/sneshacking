@@ -36,9 +36,12 @@ SOURCES += \
         asm/disasm.c \
         asm/disasmhandler.cpp \
         asm/gen_asm_definition.c \
+        dataholder.cpp \
+        dictionnary.cpp \
         fieldstablewidget.cpp \
         main.cpp \
         mytype.cpp \
+        project.cpp \
         romviewer.cpp \
         rom.cpp \
         ../src/rominfo.c \
@@ -57,9 +60,13 @@ HEADERS += \
         asm/asmtextviewsidebar.h \
         asm/disasm.h \
         asm/disasmhandler.h \
+        dataholder.h \
+        dictionnary.h \
         fieldstablewidget.h \
         mglobal.h \
         mytype.h \
+        project.h \
+        register.h \
         romviewer.h \
         rom.h \
         snestype.h \

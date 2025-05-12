@@ -9,13 +9,21 @@ namespace SNESType
 {
     Q_NAMESPACE
 
-enum class DataType {
-    Unknow,
-    Data,
+enum class BaseType {
     Byte,
-    BitField,
+    Word,
+    Long
+};
+
+Q_ENUM_NS(BaseType)
+
+enum class DataType {
+    Byte,
     Word,
     Long,
+    Unknow,
+    Data,
+    BitField,
     LongPtr,
     WordPtr,
     Array,
@@ -38,21 +46,21 @@ enum class FieldType  {
 
 Q_ENUM_NS(FieldType)
 
-struct Thing
+struct NamedThing
 {
     QString name;
     QString comment;
 };
 
-struct SNESField : public Thing
+struct SNESField : public NamedThing
 {
-    enum FieldType  type;
-    quint8          size;
+    enum FieldType      type;
+    quint8              size;
     static SNESField    fromJSON(const QJsonObject& obj);
     QJsonObject         toJSON() const;
 };
 
-struct SNESStruct : public Thing
+struct SNESStruct : public NamedThing
 {
     QVector<SNESField>  fields;
     unsigned int        size;
@@ -63,7 +71,7 @@ struct SNESStruct : public Thing
     }
 };
 
-struct Array : public Thing
+struct Array : public NamedThing
 {
     DataType        type;
     unsigned int    numberOfElements;

@@ -14,7 +14,7 @@ class WRamEntryEditor : public QWidget
 
 public:
     explicit WRamEntryEditor(QWidget *parent = nullptr);
-    void     setWRamEntry(WRAMMap::MapEntry* entry);
+    void     setWRamEntry(Dictionnary* entry);
     ~WRamEntryEditor();
 
 private slots:
@@ -29,9 +29,10 @@ private slots:
 
 signals:
     void    entryChanged();
+
 private:
     Ui::WRamEntryEditor *ui;
-    WRAMMap::MapEntry*  m_entry;
+    Dictionnary*        m_entry;
     SNESType::DataType  m_currentType;
     void                setUiSize();
 };

@@ -12,6 +12,7 @@ WRamEntryEditor::WRamEntryEditor(QWidget *parent) :
     blockSignals(true);
     ui->arrayTypeComboBox->setEnabled(false);
     ui->arrayTypeLabel->setEnabled(false);
+    ui->typeComboBox->addItem("Unknow", QVariant::fromValue(SNESType::DataType::Unknow));
     ui->typeComboBox->addItem("Data", QVariant::fromValue(SNESType::DataType::Data));
     ui->typeComboBox->addItem("Byte", QVariant::fromValue(SNESType::DataType::Byte));
     ui->typeComboBox->addItem("Word", QVariant::fromValue(SNESType::DataType::Word));
@@ -43,13 +44,15 @@ WRamEntryEditor::WRamEntryEditor(QWidget *parent) :
     });
 }
 
-void WRamEntryEditor::setWRamEntry(WRAMMap::MapEntry *entry)
+void WRamEntryEditor::setWRamEntry(Dictionnary *entry)
 {
+    qDebug() << "Entry type is " << entry->type;
     blockSignals(true);
     m_entry = entry;
     int index = ui->typeComboBox->findData(QVariant::fromValue(m_entry->type));
     ui->addressLineEdit->setText(QString::number(entry->address, 16).toUpper());
-    ui->typeComboBox->setCurrentIndex(index);
+    if (index != -1)
+        ui->typeComboBox->setCurrentIndex(index);
     ui->nameLineEdit->setText(m_entry->name);
     if (entry->type == DataType::Unknow)
         ui->sizeSpinBox->setEnabled(false);
@@ -78,6 +81,7 @@ void WRamEntryEditor::on_commentPlainTextEdit_textChanged()
 
 void WRamEntryEditor::on_typeComboBox_currentIndexChanged(int index)
 {
+    qDebug() << "Combo box changed";
     if (m_entry == nullptr)
         return;
     SNESType::DataType type = ui->typeComboBox->itemData(index).value<SNESType::DataType>();
@@ -127,7 +131,7 @@ void WRamEntryEditor::on_addressLineEdit_editingFinished()
     if (m_entry == nullptr)
         return;
     bool    ok;
-    m_entry->address = ui->addressLineEdit->text().toInt(&ok, 16);
+    m_entry->address = snesAddress(ui->addressLineEdit->text().toInt(&ok, 16));
     emit entryChanged();
 }
 

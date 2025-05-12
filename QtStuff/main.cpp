@@ -11,9 +11,9 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     Rom rom = Rom::openRomFile("D:/Project/QUsb2snes/tests/usb2snes-tests/custom rom/usb2snes-testlorom.sfc");
-    /*RomViewer w;
+    RomViewer w;
     w.show();
-    w.setRom(Rom::openRomFile("D:/Emulation/Secret of Evermore/Secret of Evermore.smc"));*/
+    w.setRom(rom);
 
     /*StructEditor e;
     e.show();
@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
 
     /*WRamEntryEditor editor;
     editor.show();*/
-    /*WRamMapEditor mEditor;
-    mEditor.show();*/
+    WRamMapEditor mEditor;
+    mEditor.show();
 
     DisasmHandler dh;
     dh.rom = &rom;
