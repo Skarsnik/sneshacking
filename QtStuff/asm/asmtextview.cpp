@@ -177,6 +177,31 @@ void ASMTextView::resizeEvent(QResizeEvent *ev)
     m_sideBar->setGeometry(QRect(cr.left(), cr.top(), sideBarAreaWidth(), cr.height()));
 }
 
+void ASMTextView::instructionChanged(DisasmInstruction *instruction)
+{
+    qDebug() << "Asmview Instruction changed" << instruction->offset;
+    unsigned int lineNumber = 0;
+    for (const auto& lc : lineContent)
+    {
+        /*if (lc.type == LineContentType::Instruction)
+            qDebug() << lc.instruction->offset;*/
+        if (lc.type == LineContentType::Instruction && lc.instruction->offset == instruction->offset)
+        {
+            qDebug() << "Find instruction at line " << lineNumber;
+            QTextCursor cur = textCursor();
+            QTextBlock b = document()->findBlockByLineNumber(lineNumber);
+            cur.setPosition(b.position());
+            cur.select(QTextCursor::LineUnderCursor);
+            cur.removeSelectedText();
+            if (instruction->advancedStrinfigy.isEmpty())
+                cur.insertText(instruction->basicStrinfigy);
+            else
+                cur.insertText(instruction->advancedStrinfigy);
+        }
+        lineNumber++;
+    }
+}
+
 void ASMTextView::updateSideBarAreaWidth(int)
 {
     setViewportMargins(sideBarAreaWidth(), 0, 0, 0);

@@ -4,7 +4,7 @@
 #include <QObject>
 #include <mytype.h>
 
-class DataHolder
+class DataHolder : public QObject
 {
     Q_OBJECT
 public:
@@ -15,7 +15,7 @@ public:
 
     static      void        setWRAMData(const QByteArray& data);
     static      void        setROMData(quint8 bank, const QByteArray& data);
-    static      DataHolder* instance();
+    static      DataHolder* dh();
 signals:
     void    wramChanged();
 

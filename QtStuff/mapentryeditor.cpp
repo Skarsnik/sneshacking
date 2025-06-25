@@ -1,14 +1,17 @@
-#include "wramentryeditor.h"
-#include "ui_wramentryeditor.h"
+#include "mapentryeditor.h"
+#include "register.h"
+#include "ui_mapentryeditor.h"
 
-WRamEntryEditor::WRamEntryEditor(QWidget *parent) :
+MapEntryEditor::MapEntryEditor(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::WRamEntryEditor)
+    ui(new Ui::MapEntryEditor)
 {
     m_entry = nullptr;
     ui->setupUi(this);
+    ui->canonLineEdit->setVisible(false);
+    ui->label_5->setVisible(false);
     // Auto connected fail for that Oo
-    connect(ui->nameLineEdit, &QLineEdit::editingFinished, this, &WRamEntryEditor::on_nameLineEdit_editingFinished);
+    connect(ui->nameLineEdit, &QLineEdit::editingFinished, this, &MapEntryEditor::on_nameLineEdit_editingFinished);
     blockSignals(true);
     ui->arrayTypeComboBox->setEnabled(false);
     ui->arrayTypeLabel->setEnabled(false);
@@ -44,7 +47,7 @@ WRamEntryEditor::WRamEntryEditor(QWidget *parent) :
     });
 }
 
-void WRamEntryEditor::setWRamEntry(Dictionnary *entry)
+void MapEntryEditor::setMapEntry(Dictionnary *entry)
 {
     qDebug() << "Entry type is " << entry->type;
     blockSignals(true);
@@ -63,14 +66,21 @@ void WRamEntryEditor::setWRamEntry(Dictionnary *entry)
     blockSignals(false);
 }
 
-WRamEntryEditor::~WRamEntryEditor()
+void MapEntryEditor::setToRegisterEditor()
+{
+    isRegister = true;
+    ui->canonLineEdit->setVisible(true);
+    ui->label_5->setVisible(true);
+}
+
+MapEntryEditor::~MapEntryEditor()
 {
     delete ui;
 }
 
 
 
-void WRamEntryEditor::on_commentPlainTextEdit_textChanged()
+void MapEntryEditor::on_commentPlainTextEdit_textChanged()
 {
     if (m_entry == nullptr)
         return;
@@ -79,7 +89,7 @@ void WRamEntryEditor::on_commentPlainTextEdit_textChanged()
 }
 
 
-void WRamEntryEditor::on_typeComboBox_currentIndexChanged(int index)
+void MapEntryEditor::on_typeComboBox_currentIndexChanged(int index)
 {
     qDebug() << "Combo box changed";
     if (m_entry == nullptr)
@@ -125,7 +135,7 @@ void WRamEntryEditor::on_typeComboBox_currentIndexChanged(int index)
 }
 
 
-void WRamEntryEditor::on_addressLineEdit_editingFinished()
+void MapEntryEditor::on_addressLineEdit_editingFinished()
 {
     qDebug() << "Address changed";
     if (m_entry == nullptr)
@@ -136,7 +146,7 @@ void WRamEntryEditor::on_addressLineEdit_editingFinished()
 }
 
 
-void WRamEntryEditor::on_nameLineEdit_editingFinished()
+void MapEntryEditor::on_nameLineEdit_editingFinished()
 {
     qDebug() << "Name edited";
     if (m_entry == nullptr)
@@ -145,9 +155,19 @@ void WRamEntryEditor::on_nameLineEdit_editingFinished()
     emit entryChanged();
 }
 
-void WRamEntryEditor::setUiSize()
+void MapEntryEditor::setUiSize()
 {
     ui->sizeSpinBox->setValue(m_entry->calculatedSize());
     ui->hexSizeLabel->setText(QString("0x%1").arg(m_entry->calculatedSize(), 0, 16, QChar(' ')));
+}
+
+
+void MapEntryEditor::on_canonLineEdit_editingFinished()
+{
+    qDebug() << "Canonical name edited";
+    if (m_entry == nullptr)
+        return ;
+    ((Register*) m_entry)->canonicalName = ui->canonLineEdit->text();
+    emit entryChanged();
 }
 

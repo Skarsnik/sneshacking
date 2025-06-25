@@ -18,6 +18,11 @@ unsigned int Dictionnary::calculatedSize() const
     }
 }
 
+QString Dictionnary::toString()
+{
+    return QString("%1 - $%2:%3").arg(name).arg(address).arg(DataTypeToString(type));
+}
+
 QJsonObject Dictionnary::toJSON() const
 {
     QJsonObject obj;

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>WRamMapEditor</class>
- <widget class="QWidget" name="WRamMapEditor">
+ <class>MapEntriesEditor</class>
+ <widget class="QWidget" name="MapEntriesEditor">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -67,7 +67,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="WRamEntryEditor" name="wramEntryEditor" native="true">
+  <widget class="MapEntryEditor" name="mapEntryEditor" native="true">
    <property name="enabled">
     <bool>false</bool>
    </property>
@@ -80,7 +80,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="WRamEntryDisplay" name="wramEntryDisplay" native="true">
+  <widget class="WRamEntryDisplay" name="mapEntryDisplay" native="true">
    <property name="geometry">
     <rect>
      <x>340</x>
@@ -129,12 +129,25 @@
     <string>Delete</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="addPushButton">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>660</y>
+     <width>75</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Add</string>
+   </property>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>WRamEntryEditor</class>
+   <class>MapEntryEditor</class>
    <extends>QWidget</extends>
-   <header>wramentryeditor.h</header>
+   <header>mapentryeditor.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

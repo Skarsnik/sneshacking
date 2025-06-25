@@ -1,11 +1,14 @@
+#include "asm/fancystringyfier.h"
+#include "registereditor.h"
 #include "romviewer.h"
 #include "structeditor.h"
-#include "wramentryeditor.h"
+#include "mapentryeditor.h"
 #include "wrammapeditor.h"
 #include "asm/asmtextview.h"
 #include "asm/disasm.h"
 #include <QDebug>
 #include <QApplication>
+extern "C" const snes_asm_instruction_definition snes_asm_instuction_list[0x100];
 
 int main(int argc, char *argv[])
 {
@@ -40,15 +43,58 @@ int main(int argc, char *argv[])
 
     /*WRamEntryEditor editor;
     editor.show();*/
-    WRamMapEditor mEditor;
-    mEditor.show();
+    /*WRamMapEditor mEditor;
+    mEditor.show();*/
+    DefinitionHandler defh;
+    defh.loadRegisters();
+    RegisterEditor rEditor;
+    rEditor.setDefinitionHandler(&defh);
+    rEditor.loadFile("");
+    rEditor.show();
 
     DisasmHandler dh;
     dh.rom = &rom;
+    FancyStringyfier fs(defh);
     auto r = dh.disassembleRoutine(snesAddress(rom.headerInfos.emulationVectorReset));
+    for (auto intr : r.instructions)
+    {
+        fs.fancier(*intr);
+    }
     ASMTextView aView;
-
+    QObject::connect(&defh, &DefinitionHandler::somethingAdded, [&] (AddressLocation loc, snesAddress addr) {
+        qDebug() << "Something added " << addr;
+        QString name;
+        if (loc == AddressLocation::REGISTER)
+        {
+            name = defh.snesRegister(addr).name;
+        }
+        for (const auto &thingaccess : dh.addressAccess[addr])
+        {
+            auto instruction = thingaccess.instruction;
+            qDebug() << "Entry used by " << instruction->offset << " " << instruction->basicStrinfigy;
+            instruction->advancedStrinfigy = QString() + snes_asm_instuction_list[instruction->opcode].opcode + " " + name;
+            qDebug() << instruction->advancedStrinfigy;
+            aView.instructionChanged(instruction);
+        }
+    });
+    QObject::connect(&defh, &DefinitionHandler::somethingUpdated, [&] (AddressLocation loc, snesAddress addr) {
+        qDebug() << "Something updated " << addr;
+        QString name;
+        if (loc == AddressLocation::REGISTER)
+        {
+            name = defh.snesRegister(addr).name;
+        }
+        for (const auto &thingaccess : dh.addressAccess[addr])
+        {
+            auto instruction = thingaccess.instruction;
+            qDebug() << "Entry used by " << instruction->offset << " " << instruction->basicStrinfigy;
+            fs.fancier(*instruction);
+            qDebug() << instruction->advancedStrinfigy;
+            aView.instructionChanged(instruction);
+        }
+    });
     aView.setAsm(r);
+    aView.setFixedSize(500, 600);
     aView.show();
     return a.exec();
 }

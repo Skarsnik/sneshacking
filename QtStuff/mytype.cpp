@@ -3,6 +3,6 @@
 
 QDebug operator<<(QDebug debug, const snesAddress &a)
 {
-    debug.nospace() << sHex(a, 3);
+    debug.nospace() << "$" + sHex(a, 3);
     return debug;
 }

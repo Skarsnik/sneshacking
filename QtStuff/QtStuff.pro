@@ -35,19 +35,26 @@ SOURCES += \
         asm/asmtextviewsidebar.cpp \
         asm/disasm.c \
         asm/disasmhandler.cpp \
+        asm/fancystringyfier.cpp \
         asm/gen_asm_definition.c \
         dataholder.cpp \
+        definitionhandler.cpp \
         dictionnary.cpp \
         fieldstablewidget.cpp \
         main.cpp \
+        mapentrieseditor.cpp \
+        mapentryeditor.cpp \
         mytype.cpp \
         project.cpp \
+        register.cpp \
+        registerdefinitions.cpp \
+        registereditor.cpp \
+        romheaderview.cpp \
         romviewer.cpp \
         rom.cpp \
         ../src/rominfo.c \
         snestype.cpp \
         wramentrydisplay.cpp \
-        wramentryeditor.cpp \
         wrammap.cpp \
         structeditor.cpp \
         wrammapeditor.cpp \
@@ -60,29 +67,36 @@ HEADERS += \
         asm/asmtextviewsidebar.h \
         asm/disasm.h \
         asm/disasmhandler.h \
+        asm/fancystringyfier.h \
         dataholder.h \
+        definitionhandler.h \
         dictionnary.h \
         fieldstablewidget.h \
+        mapentrieseditor.h \
+        mapentryeditor.h \
         mglobal.h \
         mytype.h \
         project.h \
         register.h \
+        registerdefinitions.h \
+        registereditor.h \
+        romheaderview.h \
         romviewer.h \
         rom.h \
         snestype.h \
         wramentrydisplay.h \
-        wramentryeditor.h \
         wrammap.h \
         structeditor.h \
         wrammapeditor.h \
         emunwaccessclient.h
 
 FORMS += \
+        mapentrieseditor.ui \
+        mapentryeditor.ui \
+        romheaderview.ui \
         romviewer.ui \
         wramentrydisplay.ui \
-        wramentryeditor.ui \
-        structeditor.ui \
-        wrammapeditor.ui
+        structeditor.ui
 
 INCLUDEPATH += $$PWD/../src
 

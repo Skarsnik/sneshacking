@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>WRamEntryEditor</class>
- <widget class="QWidget" name="WRamEntryEditor">
+ <class>MapEntryEditor</class>
+ <widget class="QWidget" name="MapEntryEditor">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -135,6 +135,20 @@
          <bool>true</bool>
         </property>
        </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>Canonical name :</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="canonLineEdit"/>
       </item>
      </layout>
     </item>

@@ -1,18 +1,13 @@
 #include "wrammapeditor.h"
-#include "ui_wrammapeditor.h"
+#include "ui_mapentrieseditor.h"
 
 #include <QFile>
 #include <QFileDialog>
 #include <QJsonDocument>
 
 WRamMapEditor::WRamMapEditor(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::WRamMapEditor)
+    MapEntriesEditor(parent)
 {
-    ui->setupUi(this);
-    m_currentRow = 0;
-    entryListModel = new QStandardItemModel();
-    ui->mapEntryTableView->setModel(entryListModel);
     listEntry.append(createFakeEntry(snesAddress(0), 0x10000));
         //qDebug() << "First unknow type is " <<listEntry.at(0).entry->type;
     listEntry.append(createFakeEntry(snesAddress(0x10000), 0x10000));
@@ -22,80 +17,25 @@ WRamMapEditor::WRamMapEditor(QWidget *parent) :
     {
         addUiEntryItem(entry.entry);
     }
-    connect(ui->wramEntryEditor, &WRamEntryEditor::entryChanged, this, &WRamMapEditor::onEntryChanged);
-    ui->mapEntryTableView->horizontalHeader()->setStretchLastSection(true);
-    ui->mapEntryTableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     //loadFile("D:/Project/sneshacking/SoE/rammap.json");
-    NWATimer.setInterval(500);
-    WRAMDatas = QByteArray(0x20000, '\0');
-    ui->wramEntryDisplay->setWramData(&WRAMDatas);
-}
-
-void WRamMapEditor::setNWClient(EmuNWAccessClient *client)
-{
-    NWAClient = client;
-    connect(&NWATimer, &QTimer::timeout, this, [=] {
-        if (NWAClient->isConnected())
-        {
-            qDebug() << "Read data";
-            NWAClient->cmdCoreReadMemory("WRAM", 0, 0x20000);
-        }
-    });
-    connect(NWAClient, &EmuNWAccessClient::readyRead, this, [=] {
-        auto reply = NWAClient->readReply();
-        qDebug() << reply.cmd;
-        if (reply.cmd == "EMULATION_STATUS")
-        {
-            auto map = reply.toMap();
-            if (map["state"] == "running" || map["state"] == "paused")
-            {
-                NWATimer.start();
-            }
-        }
-        if (reply.cmd == "CORE_READ")
-        {
-            WRAMDatas = reply.binary;
-            refreshedData();
-        }
-    });
-    if (client->isConnected())
-    {
-        NWAClient->cmdEmulationStatus();
-    }
-    else
-    {
-        client->connectToHost("localhost", 0xBEEF);
-        connect(client, &EmuNWAccessClient::connected, this, [=] {
-            qDebug() << "NWA connected";
-            NWAClient->cmdEmulationStatus();
-        });
-    }
+    //WRAMDatas = QByteArray(0x20000, '\0');
+    //ui->mapEntryDisplay->setWramData(&WRAMDatas);
+    postConstructor();
 }
 
 void WRamMapEditor::refreshedData()
 {
-    ui->wramEntryDisplay->setWramData(&WRAMDatas);
+    /*ui->wramEntryDisplay->setWramData(&WRAMDatas);
     ListEntry &entry = listEntry[m_currentRow];
-    ui->wramEntryDisplay->setWRamMapEntry(entry.entry);
+    ui->wramEntryDisplay->setWRamMapEntry(entry.entry);*/
+    ;
 }
 
 
 
 WRamMapEditor::~WRamMapEditor()
 {
-    delete ui;
-}
-
-void WRamMapEditor::on_mapEntryTableView_clicked(const QModelIndex &index)
-{
-    qDebug() << "Current row changed" << index.row();
-    if (index.isValid() == false)
-        return ;
-    ListEntry &entry = listEntry[index.row()];
-    m_currentRow = index.row();
-    ui->wramEntryEditor->setWRamEntry(entry.entry);
-    ui->wramEntryEditor->setEnabled(true);
-    //ui->wramEntryDisplay->setWRamMapEntry(entry.entry);
+    ;
 }
 
 void WRamMapEditor::onEntryChanged()
@@ -147,57 +87,23 @@ void WRamMapEditor::onEntryChanged()
     }
     if (listEntry[m_currentRow].real == true)
     {
+        dh->updateWramEntry(*listEntry.at(m_currentRow).entry);
         entryListModel->item(m_currentRow, 0)->setText(UiAddressItemText(currentWRAMEntry));
     }
     entryListModel->item(m_currentRow, 1)->setText(currentWRAMEntry->name);
 }
 
 
-void WRamMapEditor::on_savePushButton_clicked()
+void WRamMapEditor::saveFile()
 {
-    if (m_currentFile.isEmpty())
-    {
-        m_currentFile = QFileDialog::getSaveFileName(this);
-        if (m_currentFile.isEmpty())
-            return ;
-    }
-    WRAMMap map;
-    for (auto& entry : listEntry)
-    {
-        if (entry.real)
-        {
-            map.entries.append(*entry.entry);
-        }
-    }
-    QJsonObject jObj = map.toJSON();
-    QJsonDocument jdoc(jObj);
-    QFile f(m_currentFile);
-    f.open(QIODevice::WriteOnly);
-    f.write(jdoc.toJson());
-    f.close();
+    dh->saveWRamMap();
 }
 
-
-void WRamMapEditor::on_loadPushButton_clicked()
+void    WRamMapEditor::myLoadFile()
 {
-    QString file = QFileDialog::getOpenFileName(this);
-    if (file.isEmpty())
-        return ;
-    loadFile(file);
-}
-
-void    WRamMapEditor::loadFile(QString file)
-{
-    entryListModel->clear();
-    listEntry.clear(); // FIXME, need to clear memory
-    m_currentFile = file;
-    QFile f(file);
-    f.open(QIODevice::ReadOnly);
-    QJsonDocument jDoc = QJsonDocument::fromJson(f.readAll());
-    f.close();
-    WRAMMap map = WRAMMap::fromJSON(jDoc.object());
+    dh->loadWRAMMap(m_currentFile);
     unsigned int i = 0;
-    for (auto &entry : map.entries)
+    for (auto &entry : dh->wramMap().entries)
     {
         ListEntry e;
         e.real = true;
@@ -207,7 +113,7 @@ void    WRamMapEditor::loadFile(QString file)
         *e.entry = entry;
         if (listEntry.size() > 2)
         {
-            auto& prevEntry = map.entries.at(i - 1);
+            auto& prevEntry = dh->wramMap().entries.at(i - 1);
             if (prevEntry.address + prevEntry.calculatedSize() - entry.address > 0)
             {
                 listEntry.append(createFakeEntry(snesAddress(prevEntry.address + 1), entry.address - prevEntry.address - 1));
@@ -224,32 +130,14 @@ void    WRamMapEditor::loadFile(QString file)
     {
         listEntry.append(createFakeEntry(snesAddress(listEntry.last().address + listEntry.last().entry->calculatedSize()), 0x20000 - listEntry.last().entry->address - listEntry.last().entry->calculatedSize()));
     }
-    for (auto& entry :  listEntry)
+/*    for (auto& entry :  listEntry)
     {
         addUiEntryItem(entry.entry);
     }
     ui->mapEntryTableView->horizontalHeader()->setStretchLastSection(true);
-    ui->mapEntryTableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->mapEntryTableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);*/
 }
 
-void WRamMapEditor::addUiEntryItem(Dictionnary *entry, int row)
-{
-    auto newAddItem = new QStandardItem(UiAddressItemText(entry));
-    auto newNameItem = new QStandardItem(entry->name);
-    QList<QStandardItem*> li;
-    li << newAddItem << newNameItem;
-    if (row == -1)
-    {
-        entryListModel->appendRow(li);
-    } else {
-        entryListModel->insertRow(row, li);
-    }
-}
-
-QString WRamMapEditor::UiAddressItemText(Dictionnary *entry)
-{
-    return QString("$%1").arg(entry->address, 0, 16, QChar(' ')).toUpper();
-}
 
 WRamMapEditor::ListEntry WRamMapEditor::createFakeEntry(snesAddress address, unsigned int size)
 {

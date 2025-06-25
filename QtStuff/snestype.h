@@ -46,6 +46,15 @@ enum class FieldType  {
 
 Q_ENUM_NS(FieldType)
 
+enum class AddressLocation {
+    WRAM,
+    SRAM,
+    ROM,
+    REGISTER
+};
+
+Q_ENUM_NS(AddressLocation)
+
 struct NamedThing
 {
     QString name;

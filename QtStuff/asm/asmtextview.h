@@ -33,6 +33,7 @@ public:
     int     sideBarAreaWidth();
     void    sideBarPaintEvent(QPaintEvent* event);
     void    resizeEvent(QResizeEvent* ev);
+    void    instructionChanged(DisasmInstruction* instruction);
 
 private:
     QWidget* m_sideBar;

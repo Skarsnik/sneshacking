@@ -79,42 +79,7 @@ DisasmInstruction::DisasmInstruction(const snes_asm_instruction& instruction)
     basicStrinfigy = QString("%1 %2")
                                 .arg(snes_asm_instuction_list[instruction.opcode].opcode)
                                 .arg(operandString(instruction, operand, instruction.offset));
-    // Operation that operate at bit level, bit, and, ora, sep, rep...
-    if (   opcode == S_INSTR_AND_VALUE_A
-        || opcode == S_INSTR_ORA_VALUE_A
-        || opcode == S_INSTR_BIT_VALUE_A)
-    {
-        advancedStrinfigy = QString("%1 b%2").arg(snes_asm_instuction_list[instruction.opcode].opcode, sBit(operand, length - 1));
-    }
-    const char* flags = "nvmxdizc";
-    if (opcode == S_INSTR_SEP_VALUE_BYTE)
-    {
-        advancedStrinfigy = "sep P ";
-        for (unsigned int i = 0; i < 8; i++)
-        {
-            if (i == 2 && (operand & 0b00100000) == 0b00100000)
-            {
-                advancedStrinfigy += "m¹⁶";
-                qDebug() << "PIKOOO";
-            } else {
-            if ((operand & (0b10000000 >> i)) == 0b10000000 >> i)
-                advancedStrinfigy += flags[i];
-            else
-                advancedStrinfigy += "-";
-            }
-        }
-    }
-    if (opcode == S_INSTR_REP_VALUE_BYTE)
-    {
-        advancedStrinfigy = "rep P ";
-        for (unsigned int i = 0; i < 8; i++)
-        {
-            if ((operand & (0b10000000 >> i)) == 0b10000000 >> i)
-                advancedStrinfigy += QString(flags[i]).toUpper();
-            else
-                advancedStrinfigy += "-";
-        }
-    }
+    operandValue = operand;
 }
 
 DisasmThing DisasmHandler::disassembleRoutine(snesAddress pc)

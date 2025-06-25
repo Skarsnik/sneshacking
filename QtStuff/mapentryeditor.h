@@ -1,21 +1,22 @@
-#ifndef WRAMENTRYEDITOR_H
-#define WRAMENTRYEDITOR_H
+#ifndef MAPENTRYEDITOR_H
+#define MAPENTRYEDITOR_H
 
 #include <QWidget>
 #include <wrammap.h>
 
 namespace Ui {
-class WRamEntryEditor;
+class MapEntryEditor;
 }
 
-class WRamEntryEditor : public QWidget
+class MapEntryEditor : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit WRamEntryEditor(QWidget *parent = nullptr);
-    void     setWRamEntry(Dictionnary* entry);
-    ~WRamEntryEditor();
+    explicit MapEntryEditor(QWidget *parent = nullptr);
+    void     setMapEntry(Dictionnary* entry);
+    void     setToRegisterEditor();
+    ~MapEntryEditor();
 
 private slots:
 
@@ -27,14 +28,17 @@ private slots:
 
     void on_nameLineEdit_editingFinished();
 
+    void on_canonLineEdit_editingFinished();
+
 signals:
     void    entryChanged();
 
 private:
-    Ui::WRamEntryEditor *ui;
+    Ui::MapEntryEditor *ui;
     Dictionnary*        m_entry;
     SNESType::DataType  m_currentType;
     void                setUiSize();
+    bool                isRegister = false;
 };
 
-#endif // WRAMENTRYEDITOR_H
+#endif // MAPENTRYEDITOR_H

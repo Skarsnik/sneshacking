@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>RomHeaderView</class>
+ <widget class="QWidget" name="RomHeaderView">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>502</width>
+    <height>654</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="label_11">
+     <property name="text">
+      <string>ROM Header</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_31">
+     <property name="text">
+      <string>General Informations</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout_2" columnstretch="2,3,1,1,1,1,1,1,1,1,1,1">
+     <item row="3" column="1" colspan="3">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Chipsets : </string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="romSizeByteLabel">
+       <property name="text">
+        <string>01</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0">
+      <widget class="QLabel" name="romVersionLabel">
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="develIdByte">
+       <property name="text">
+        <string>45</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="chipsetByteLabel">
+       <property name="text">
+        <string>00</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="1" colspan="3">
+      <widget class="QLabel" name="label_9">
+       <property name="text">
+        <string>Rom version :</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="4" colspan="8">
+      <widget class="QLabel" name="regionLabel">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="4" colspan="8">
+      <widget class="QLabel" name="sramSizeLabel">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="0">
+      <widget class="QLabel" name="checksumByteLabel">
+       <property name="text">
+        <string>45 5F</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="1" colspan="3">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>SRAM size :</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1" colspan="3">
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Rom size :</string>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="4" colspan="8">
+      <widget class="QLabel" name="romVersionLabel_2">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>02</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="speedByteLabel">
+       <property name="text">
+        <string>00</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="4" colspan="8">
+      <widget class="QLabel" name="romSizeLabel">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" colspan="3">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Speed :</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1" colspan="3">
+      <widget class="QLabel" name="label_10">
+       <property name="text">
+        <string>Developper ID :</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="12">
+      <widget class="QLabel" name="titleBytesLabel">
+       <property name="text">
+        <string>00 01 02</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0">
+      <widget class="QLabel" name="regionByteLabel">
+       <property name="text">
+        <string>04</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="1" colspan="3">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Region :</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <widget class="QLabel" name="checksumComplementByteLabel">
+       <property name="text">
+        <string>02 24</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="4" colspan="8">
+      <widget class="QLabel" name="develIdLabel">
+       <property name="text">
+        <string>04</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Title: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" colspan="11">
+      <widget class="QLabel" name="titleLabel">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="1" colspan="3">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>Checksum complement :</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="1" colspan="3">
+      <widget class="QLabel" name="label_13">
+       <property name="text">
+        <string>Checksum :</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="4" colspan="8">
+      <widget class="QLabel" name="checksumComplementLabel">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="4" colspan="8">
+      <widget class="QLabel" name="checksumLabel">
+       <property name="text">
+        <string>TextLabel</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="4" colspan="3">
+      <widget class="QLabel" name="speedLabel">
+       <property name="text">
+        <string>fast</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4" colspan="3">
+      <widget class="QLabel" name="chipsetLabel">
+       <property name="text">
+        <string>Rom + Stuff</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="7" colspan="5">
+      <widget class="QLabel" name="coproLabel">
+       <property name="text">
+        <string>DSP</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="7" colspan="3">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Mapping:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="10" colspan="2">
+      <widget class="QLabel" name="mppingLabel">
+       <property name="text">
+        <string>hirom</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_14">
+     <property name="text">
+      <string>Vector Interrupt table</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_25">
+     <property name="text">
+      <string>This table is used when an interrupt occur, the coresponding routine will be executed. It can be an hardware event or a cpu instruction. Eg: when a you hit the reset button the routine specified in Emulation RESET will be executed. Most of the time Emulation entries are unused aside the RESET one
+</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0" columnstretch="0,0,0,0,0,0">
+     <property name="spacing">
+      <number>6</number>
+     </property>
+     <item row="3" column="3" colspan="2">
+      <widget class="QLabel" name="label_21">
+       <property name="text">
+        <string>Emulation BRK/IRQ</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="5">
+      <widget class="QLabel" name="emulationBRKLabel">
+       <property name="text">
+        <string>58 56</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0" colspan="2">
+      <widget class="QLabel" name="label_17">
+       <property name="text">
+        <string>Native ABORT</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="2">
+      <widget class="QLabel" name="nativeABORTLabel">
+       <property name="text">
+        <string>58 56</string>
+       </property>
+      </widget>
+     </item>
+     <item row="6" column="0" colspan="6">
+      <widget class="QLabel" name="label_29">
+       <property name="text">
+        <string>NMI is the when a frame is done being displayed</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="8" column="0" colspan="6">
+      <widget class="QLabel" name="label_30">
+       <property name="text">
+        <string>IRQ is triggered by an instruction. Reset is reset button</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="6">
+      <widget class="QLabel" name="label_26">
+       <property name="text">
+        <string>Triggered by the COP (Co-processor) instruction</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="6">
+      <widget class="QLabel" name="label_27">
+       <property name="text">
+        <string>Triggered by the BRK instruction</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0" colspan="6">
+      <widget class="QLabel" name="label_28">
+       <property name="text">
+        <string>These are unused</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="nativeCOPLabel">
+       <property name="text">
+        <string>0123</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <widget class="QLabel" name="label_15">
+       <property name="text">
+        <string>Native COP</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QLabel" name="nativeBRKLabel">
+       <property name="text">
+        <string>58 58</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="QLabel" name="label_16">
+       <property name="text">
+        <string>Native BRK</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="2">
+      <widget class="QLabel" name="nativeNMILabel">
+       <property name="text">
+        <string>59 9F</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0" colspan="2">
+      <widget class="QLabel" name="label_18">
+       <property name="text">
+        <string>Native NMI</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="2">
+      <widget class="QLabel" name="nativeIRQLabel">
+       <property name="text">
+        <string>58 9F</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0" colspan="2">
+      <widget class="QLabel" name="label_19">
+       <property name="text">
+        <string>Native IRQ</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="5">
+      <widget class="QLabel" name="emulationCOPLabel">
+       <property name="text">
+        <string>25 64</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3" colspan="2">
+      <widget class="QLabel" name="label_20">
+       <property name="text">
+        <string>Emulation COP</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="5">
+      <widget class="QLabel" name="emulationABORTLabel">
+       <property name="text">
+        <string>57 85</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="3" colspan="2">
+      <widget class="QLabel" name="label_22">
+       <property name="text">
+        <string>Emulation ABORT</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="5">
+      <widget class="QLabel" name="emulationNMILabel">
+       <property name="text">
+        <string>F5 8D</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="3" colspan="2">
+      <widget class="QLabel" name="label_23">
+       <property name="text">
+        <string>Emulation NMI</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="5">
+      <widget class="QLabel" name="emulationRESETLabel">
+       <property name="text">
+        <string>C3 B2</string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="3" colspan="2">
+      <widget class="QLabel" name="label_24">
+       <property name="text">
+        <string>Emulation RESET</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

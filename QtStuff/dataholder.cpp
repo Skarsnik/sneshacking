@@ -32,7 +32,12 @@ void DataHolder::setROMData(quint8 bank, const QByteArray &data)
 
 }
 
-DataHolder *DataHolder::instance()
+HeaderInfos DataHolder::getHeaderInfos()
+{
+    myDH->ROM
+}
+
+DataHolder *DataHolder::dh()
 {
     if (myDH == nullptr)
         myDH = new DataHolder();
